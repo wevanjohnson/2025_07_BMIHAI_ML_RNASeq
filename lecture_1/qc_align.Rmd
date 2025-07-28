@@ -1,0 +1,367 @@
+---
+title: "An Introduction to RNA-sequencing"
+subtitle: "QC, Preprocessing, and Alignment"
+author: | 
+  | W. Evan Johnson, Ph.D.
+  | Professor, Division of Infectious Disease
+  | Director, Center for Data Science
+  | Co-Direcor, Center for Biomedical Informatics and Health AI
+  | Rutgers University -- New Jersey Medical School
+date: "`r Sys.Date()`"
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{xcolor}
+  - \setbeamercolor{frametitle}{fg=black}
+  - \usepackage{graphicx}
+  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{qcfigs/RH_template_Page_2.png}}
+  - \addtobeamertemplate{frametitle}{\vspace*{.25in}}{\vspace*{.25in}}
+  - \setbeamerfont{frametitle}{size=\huge}
+  - \usepackage{tikz}
+output: 
+  beamer_presentation
+classoption: aspectratio=169 
+editor_options: 
+  chunk_output_type: console
+tables: true
+---
+
+
+## Installing R Packages: 
+\Large
+Install the following tools: `Rsubread`, `Rsamtools`,  and `SummarizedExperiment`. We will also need help from the `tidyverse.`
+
+```{r eval=F}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install(c("Rsubread","Rsamtools",
+             "tidyverse","SummarizedExperiment"))
+```
+
+
+## Load Packages for Today
+\large
+We will be using the following packages for today's lecture:
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse) ## tools for data wrangling
+library(Rsubread) ## alignment and feature counts
+library(Rsamtools) ## managing .sam and .bam files
+library(SummarizedExperiment) ## managing counts data
+```
+
+## Objective
+
+\Large
+* Disclaimer: non-comprehensive introduction to RNA-sequencing 
+* Introduce preprocessing steps
+* Visualization 
+* Analytical methods 
+* Common software tools
+
+## Steps to an RNA-seq Analysis (Literacy)
+
+\Large
+1. Preprocessing and QC:
+    + Fasta and Fastq files
+    + FastQC: good vs. bad examples
+    + Visualization
+2. Alignment
+    + Obtaining genome sequence and annotation
+    + Software: Bowtie, TopHat, STAR, Subread/Rsubread
+3. Expression Quantification
+    + Count reads hitting genes, etc
+    + Approaches/software: HT-Seq, STAR, Cufflinks, RPKM FPKM or CPM, RSEM, edgeR, findOverlaps (GenomicRanges). featureCounts (Rsubread)
+
+## Steps to an RNA-seq Analysis (Literacy)
+
+\Large
+4. More visualization
+    + Heatmaps, boxplots, PCA, t-SNE, UMAP
+5. Differential Expression
+    + Batch correction
+    + Overdispersion
+    + General Workflow
+    + Available tools: edgeR, DESeq, Limma/voom
+    + Even more visualization!!
+
+## Illumina Sequencing Workflow
+
+\center
+![](qcfigs/illumina.png){height=70%}
+
+## Sequencing Data Formats
+\Large
+Genome sequcencing data is often stored in one of two formats, FASTA and FASTQ text files. For example a FASTA files looks like the following: 
+\center
+![](qcfigs/fasta.png){height=60%}
+
+## FASTQ Files
+We can also store confidence or quality scores using a FASTQ format: 
+![](qcfigs/fastq.png)
+
+## .FASTQ Paired End
+![](qcfigs/fastq_paired.png)
+
+## FASTQ Encoding
+In order to translate FASTQ quality scores: 
+
+![](qcfigs/encoding1.png)
+[https://en.wikipedia.org/wiki/Phred_quality_score](https://en.wikipedia.org/wiki/Phred_quality_score)
+
+
+## Sequence Quality Score (PHRED)
+\center
+![](qcfigs/phred.png){height=65%}
+
+## Sequence Quality Score (PHRED)
+\Large
+Quality scores (Phred)
+
+- Sanger Phred: Range=(0,40), $P = 1-10^{-(ASCII-33)/10}$
+- Solexa: Range= (-5,40),  $P = \frac{10^{(ASCII-64)/10)}}{ 1+10^{(ASCII-64)/10}}$
+- Illumina 1.3: (0,40),  $P = \frac{10^{(ASCII-64)/10)}}{ 1+10^{(ASCII-64)/10}}$
+- Illumina 1.5: Range=(2,40), $P = 1-10^{-(ASCII-64)/10}$
+- Illumina 1.8: Same as Sanger except Range=(0,41)
+
+## FASTQ Probability
+![](qcfigs/encoding2.png)
+
+## Preprocessing and QC using FASTQC
+\Large 
+[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) provides a simple way to do QC checks on raw sequence data:  
+
+* Import of data from BAM, SAM or FastQ files
+* Quick overview and summary graphs and tables to quickly assess your data
+* Export of results to an HTML based permanent report
+* Offline operation to allow automated generation of reports without running the interactive application
+
+## Preprocessing and QC using FASTQC
+\Large
+Interactive GUI from Amarel Desktop:
+```{bash, eval=F}	
+module spider fastqc
+#module avail fastqc
+module load FastQC
+fastqc
+```
+
+## FastQC Example
+\Large
+Running FastQC from command-line (single file): 
+```{bash, eval=F}	
+mkdir example_data/fastqc
+fastqc example_data/reads/R01_10_short500K.fq.gz \
+       --outdir=example_data/fastqc
+```
+
+## FastQC Example
+\Large
+Running FastQC from command-line (multiple files): 
+```{bash, eval=F}	
+fastqc *.fq.gz --outdir=example_data/fastqc
+```
+
+
+## FastQC Score Distribution
+\center
+![](qcfigs/fastqcscore.png){width=40%}
+![](qcfigs/fastqcscoredist.png){width=40%}
+
+
+## FastQC Base and N Distribution
+\center
+![](qcfigs/fastqcbase.png){width=40%}
+![](qcfigs/fastqcn.png){width=40%}
+
+## MultiQC Example
+\Large
+You can use [`multiqc`](https://multiqc.info) to combine FastQC results. On Amarel Desktop do the following:
+
+```{bash, eval=F}
+module load miniconda
+pip install multiqc
+cd example_data/fastqc
+multiqc .
+```
+
+
+## Alignment to the Reference Genome
+\Large
+**Goal**: Find the genomic location for the sequencing read. Software: `Bowtie2`, `TopHat`, `STAR`, `Subread/Rsubread`, many others!
+
+\center
+![](qcfigs/align1.png){height=50%}
+
+## Indexing your genome
+
+\Large 
+Abraham Lincoln: "Give me six hours to chop down a tree and I will spend the first four sharpening the axe." 
+
+(4 hours indexing the genome, 2 hours aligning the reads)
+
+## Creating a Hash Index Table
+\center
+![](qcfigs/hash1.png){height=70%}
+
+## Creating a Hash Index Table
+\center
+![](qcfigs/hash2.png){height=70%}
+
+## Creating a Hash Index Table
+\center
+![](qcfigs/hash3.png){height=70%}
+
+## Creating a Hash Index Table
+\center
+![](qcfigs/hash4.png){height=70%}
+
+## Creating a Hash Index Table
+\center
+![](qcfigs/hash5.png){height=70%}
+
+## Read Lookup
+\center
+![](qcfigs/read1.png){height=70%}
+
+## Read Lookup
+\center
+![](qcfigs/read2.png){height=70%}
+
+## Read Lookup
+\center
+![](qcfigs/read3.png){height=70%}
+
+## Read Lookup
+\center
+![](qcfigs/read4.png){height=70%}
+
+## Read Lookup
+\center
+![](qcfigs/read5.png){height=70%}
+
+## Needleman-Wunsch
+\center
+![](qcfigs/needleman_wunsch1.png){width=60%}
+
+## Needleman-Wunsch
+\center
+![](qcfigs/needleman_wunsch2.png){width=60%}
+
+## Needleman-Wunsch
+\center
+![](qcfigs/needleman_wunsch3.png){width=60%}
+
+## Needleman-Wunsch
+\center
+![](qcfigs/needleman_wunsch4.png){width=60%}
+
+## Using Rsubread to do Alignment
+
+\Large 
+The following userguide will be helpful for you: 
+
+http://bioinf.wehi.edu.au/subread-package/SubreadUsersGuide.pdf
+
+
+## Indexing your genome
+
+\Large 
+Note that you will rarely do this for human alignment. You will usually download an existing index given to you by others who have already done this work. You will do this often if you are aligning microbial reads, e.g. MTB or some other organism for which others have not already made your index for you.
+
+\normalsize
+```{r, eval=F}
+buildindex(basename="example_data/genome/ucsc.hg19.chr1_120-150M",
+ reference="example_data/genome/ucsc.hg19.chr1_120-150M.fasta.gz")
+```
+
+\Large
+Took me ~0.2 minutes!
+
+## Aligning your reads:  
+\Large
+Note that this outputs results in a .bam file and not a .sam file
+
+\normalsize
+```{r, eval=F, include=F}
+align(index="example_data/genome/ucsc.hg19.chr1_120-150M",readfile1="example_data/reads/R01_10_short500K.fq.gz",output_file="example_data/alignments/R01_10_short.bam", nthreads=4)
+```
+
+```{r eval=F, include=F}
+align(index="rna_seq/genome/ucsc.hg19.chr1_120-150M",readfile1="rna_seq/reads/R01_10_short500K.fq.gz",output_file="rna_seq/alignments/R01_10_short.bam", nthreads=4) 
+```
+
+```{r, eval=F}
+align(index="rna_seq/genome/ucsc.hg19.chr1_120-150M",
+      readfile1="rna_seq/reads/R01_10_short500K.fq.gz",
+      output_file="rna_seq/alignments/R01_10_short.bam", 
+      nthreads=4) 
+```
+
+My old laptop was an Apple M2, with 8 cores (used 4 cores), 24GB RAM: 
+
+  - Took 15.7 minutes to align ~60M reads to the 30M bases
+  - Took 0.7 minutes to align ~6.5M reads to the 30M bases
+  - Took 0.3 minutes to align ~500K reads to the 30M bases
+
+## Algning the reads using STAR
+
+\Large
+This afternoon we will use the STAR aligner on Amarel to align a set of RNA-seq fastq files!
+
+## Aligned Sequencing Data Formats (SAM and BAM)
+Note that Rsubread outputs a .bam file (bam = binary alignment map) and not a .sam file (sam = sequence alignment map). Here is some information about a .sam file: https://en.wikipedia.org/wiki/SAM_(file_format)
+
+![](qcfigs/sambam.png)
+
+## Aligned Sequencing Data Formats (SAM and BAM)
+\Large
+To convert .sam to .bam or vice versa, a package called Rsamtools. Using Rsamtools, you can convert bam to sam as follows:
+
+```{r, eval=F}
+asSam("rna_seq/alignments/R01_10_short.bam", 
+      overwrite=T) 
+
+# To convert to bam:
+#asBam("rna_seq/alignments/R01_10_short.bam") 
+```
+
+
+## Feature counts
+\Large
+Now we can count reads hitting genes. Approaches/software: 
+
+* HT-Seq
+* STAR
+* Cufflinks
+* RPKM FPKM or CPM
+* RSEM
+* edgeR
+* findOverlaps (GenomicRanges)
+* featureCounts (Rsubread)
+
+## Feature counts
+\center
+![](qcfigs/featurecounts.png){height=60%}
+
+## Feature counts
+
+```{r, eval=FALSE}
+fCountsList = featureCounts(
+  "rna_seq/alignments/R01_10_short.bam",
+  annot.ext="rna_seq_files/genome/genes.chr1_120-150M.gtf",
+  isGTFAnnotationFile=TRUE)
+
+featureCounts = cbind(fCountsList$annotation[,1], 
+                      fCountsList$counts)
+
+write.table(featureCounts, 
+    "rna_seq/alignments/R01_10_short.features.txt", 
+    sep="\t", col.names=FALSE, row.names=FALSE, quote=FALSE)
+```
+
+
+
+## Session info
+\tiny
+```{r session info}
+sessionInfo()
+```

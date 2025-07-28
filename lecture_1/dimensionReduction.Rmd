@@ -1,0 +1,538 @@
+---
+title: "Dimension Reduction Techniques"
+author: | 
+  | W. Evan Johnson, Ph.D.
+  | Professor, Division of Infectious Disease
+  | Director, Center for Data Science
+  | Co-Direcor, Center for Biomedical Informatics and Health AI
+  | Rutgers University -- New Jersey Medical School
+date: "`r Sys.Date()`"
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{xcolor}
+  - \setbeamercolor{frametitle}{fg=black}
+  - \usepackage{graphicx}
+  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{qcfigs/RH_template_Page_2.png}}
+  - \addtobeamertemplate{frametitle}{\vspace*{.25in}}{\vspace*{.25in}}
+  - \setbeamerfont{frametitle}{size=\huge}
+  - \usepackage{tikz}
+output: 
+  beamer_presentation
+classoption: aspectratio=169 
+editor_options: 
+  chunk_output_type: console
+tables: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+library(tidyverse)
+img_path <- "dimRedFigs/"
+```
+
+##  Dimension reduction 
+
+A typical machine learning challenge will include a large number of predictors, which makes visualization somewhat challenging. We have shown methods for visualizing univariate and paired data, but plots that reveal relationships between many variables are more complicated in higher dimensions. 
+
+##  Dimension reduction : motivation 
+Microbiome 16S data example: why we need dimension reduction
+
+```{r, eval=F}
+library(animalcules)
+run_animalcules()
+```
+
+##  Dimension reduction : motivation 
+![](dimRedfigs/assign_visual.png)
+
+##  Dimension reduction 
+
+Here we describe powerful techniques useful for exploratory data analysis, among other things, generally referred to as __dimension reduction__. 
+
+The general idea is to reduce the dimension of the dataset while preserving important characteristics, such as the distance between features or observations.
+
+The technique behind it all, the singular value decomposition, is also useful in other contexts. Principal component analysis (PCA) is the approach we will be showing first. Before applying PCA to high-dimensional datasets, we will motivate the ideas behind with a simple example.
+
+
+## Dimension reduction: twin heights 
+
+We consider an= simulated example with twin heights (children and adults):
+
+```{r, message=FALSE}
+set.seed(1988)
+library(MASS)
+n <- 100
+Sigma <- matrix(c(9, 9 * 0.9, 9 * 0.92, 9 * 1), 2, 2)
+x <- rbind(mvrnorm(n / 2, c(69, 69), Sigma),
+           mvrnorm(n / 2, c(55, 55), Sigma))
+```
+
+## Dimension reduction: twin heights 
+A scatterplot reveals that the correlation is high and there are two groups of twins: adults and children:
+
+<!--
+```{r simulated-twin-heights, fig.width=3, fig.height=3, echo=FALSE, message=FALSE, out.width="50%"}
+lim <- c(48, 78)
+rafalib::mypar()
+plot(x, xlim=lim, ylim=lim)
+```
+-->
+
+```{r distance-illustration, fig.width=3, fig.height=3, echo=FALSE, out.width="50%", fig.align='center'}
+plot(x, xlim=lim, ylim=lim, xlab='Twin 2',ylab='Twin 1')
+#lines(x[c(1, 2),], col = "blue", lwd = 2)
+#lines(x[c(2, 51),], col = "red", lwd = 2)
+points(x[c(1, 2, 51),], pch = 16)
+```
+
+## Dimension reduction: twin heights 
+Our features are $N$ two-dimensional points, the two heights, and, for illustrative purposes, we will act as if visualizing two dimensions is too challenging. We therefore want to reduce the dimensions from two to one, but still be able to understand important characteristics of the data, for example that the observations cluster into two groups: adults and children.
+
+
+## Dimension reduction: twin heights 
+Now, can we pick a one-dimensional summary that makes this approximation even better?
+
+If we look back at the previous scatterplot and visualize a line between any pair of points, the length of this line is the distance between the two points. These lines tend to go along the direction of the diagonal. Notice that if we instead plot the difference versus the average:
+
+```{r}
+z  <- cbind(average=(x[,2] + x[,1])/2,  
+            difference=x[,2] - x[,1])
+```
+
+## Dimension reduction: twin heights 
+We can see how the distance between points is mostly explained by the first dimension: the average.
+
+```{r rotation, fig.width=3, fig.height=3, echo=FALSE, out.width="50%", fig.align='center'}
+rafalib::mypar()
+plot(z, xlim=lim, ylim = lim - mean(lim))
+#lines(z[c(1,2),], col = "blue", lwd = 2)
+#lines(z[c(2,51),], col = "red", lwd = 2)
+points(z[c(1,2,51),], pch = 16)
+```
+
+## Linear transformations 
+
+Note that each row of $X$ was transformed using a linear transformation. For any row $i$, the first entry was: 
+
+$$Z_{i,1} = a_{1,1} X_{i,1} + a_{2,1} X_{i,2}$$
+
+with $a_{1,1} = 0.5$ and $a_{2,1} = 0.5$.
+
+The second entry was also a linear transformation:
+
+$$Z_{i,2} = a_{1,2} X_{i,1} + a_{2,2} X_{i,2}$$
+
+with $a_{1,2} = 1$ and $a_{2,2} = -1$.
+
+## Linear transformations 
+More formally, we can write the operation we just performed like this:
+
+$$
+Z = X A
+\mbox{ with }
+A = \,
+\begin{pmatrix}
+1/2&1\\
+1/2&-1\\
+\end{pmatrix}.
+$$
+
+```{r}
+A <- matrix(c(1/2,1/2,1,-1), nrow=2)
+z <- x%*%A
+head(z)
+```
+
+
+## Linear transformations 
+And that we can transform back by simply multiplying by $A^{-1}$ as follows:
+
+$$
+X = Z A^{-1} 
+\mbox{ with }
+A^{-1} = \,
+\begin{pmatrix}
+1&1\\
+1/2&-1/2\\
+\end{pmatrix}.
+$$
+```{r}
+A <- matrix(c(1/2,1/2,1,-1), nrow=2)
+x <- z%*%solve(A)
+head(x)
+```
+
+## Linear transformations 
+Dimension reduction can often be described as applying a transformation $A$ to a matrix $X$ with many columns that _moves_ or _rotates_ the information contained in $X$ to the first few columns of $Z=AX$, then keeping just these few informative columns, thus reducing the dimension of the vectors contained in the rows.
+
+##  Principal component analysis 
+![](dimRedfigs/princomps.png)
+
+
+## Principal component analysis {#pca}
+
+The __first principal component (PC)__ of a matrix $X$ is the linear orthogonal transformation of $X$ that maximizes the variability. The function `prcomp` provides this info:
+
+```{r}
+pca <- prcomp(x)
+pca
+```
+
+
+## Principal component analysis 
+Note that the first PC is (almost) the same as the mean we used earlier and the second is (almost) the difference!
+
+The function PCA returns both the rotation needed to transform $X$ so that the variability of the columns is decreasing from most variable to least (accessed with `$rotation`) as well as the resulting new matrix (accessed with `$x`).
+
+```{r}
+names(pca)
+```
+
+## Principal component analysis 
+For example:
+
+```{r}
+z  <- cbind(average=(x[,2] + x[,1])/2,  
+            difference=x[,2] - x[,1])
+head(cbind(z, pca$x))
+```
+
+## Principal component analysis 
+We can visualize these to see how the components summarize the data:
+
+
+```{r illustrate-pca-twin-heights, echo=FALSE, height = 5, out.width="70%",fig.align='center'}
+illustrate_pca <- function(x, flip=1, 
+                           pad = round((nrow(x)/2-ncol(x))*1/4), 
+                           cex = 5, center = TRUE){
+  rafalib::mypar(1,5)
+  ## flip is because PCA chooses arbitrary sign for loadings and PC
+  colors = rev(RColorBrewer::brewer.pal(9, "RdBu"))
+  
+  pca <- prcomp(x, center = center)
+  if(center) z <- t(x) - rowMeans(t(x))
+  
+  cols <- 1:ncol(x)
+  rows <- 1:nrow(x)
+  image(cols, rows, z[,rev(1:ncol(z))], xaxt = "n", yaxt = "n", 
+        xlab="", ylab="", main= "X", col = colors)
+  abline(h=rows + 0.5, v = cols + 0.5)
+
+  rafalib::nullplot(xaxt="n",yaxt="n",bty="n")
+  text(0.5, 0.5, "=", cex = cex)
+  
+  z <- flip*t(pca$x)
+  image(cols, rows, z[,rev(1:ncol(z))], xaxt = "n", yaxt = "n",xlab="",ylab="", main= "Weights", col = colors)
+  abline(h=rows + 0.5, v = cols + 0.5)
+
+  rafalib::nullplot(xaxt="n",yaxt="n",bty="n")
+  text(0.5, 0.5, "x", cex = cex)
+  
+  z <- flip*pca$rotation
+  nz <- cbind(matrix(NA, ncol(z), pad), z, matrix(NA, ncol(z), pad))
+  rows <- 1:ncol(nz)
+  image(cols, rows, nz[,rev(1:ncol(nz))],  xaxt = "n", yaxt = "n", bty = "n", xlab="",ylab="", col = colors)
+  abline(h = pad+0:ncol(z)+1/2)
+  lines(c(ncol(z)/2+0.5,ncol(z)/2+1/2),c(pad,pad+ncol(z))+0.5)
+  text(ncol(z)/2+0.5, pad+ncol(z)+2 , expression(bold(Pattern^T)), font=2)
+}
+rafalib::mypar(1,1)
+illustrate_pca(x, flip = -1)
+```
+
+## Principal component analysis 
+It turns out that we can find this linear transformation not just for two dimensions but for matrices of any dimension $p$. Thus, for a matrix with $X$ with $p$ columns, we can find a transformation that creates $Z$ for which the first column is the first principal component, the second column is the second principal component, and so on. 
+
+If after a certain number of columns, say $k$, the variances of the columns of $Z_j$, $j>k$ are very small, it means these dimensions have little to contribute to the distance and we can approximate distance between any two points with just $k$ dimensions. If $k$ is much smaller than $p$, then we can achieve a very efficient summary or **reduction** of our data.
+
+## Iris example
+
+The iris data is a widely used example in data analysis courses. It includes four botanical measurements related to three flower species:
+\small
+```{r}
+head(iris)
+```
+
+## Iris example
+Let's compute the distance between each observation. You can clearly see the three species with one species very different from the other two:
+\small
+```{r iris-distances, fig.width = 4, fig.height = 4, out.width="50%", fig.align='center'}
+x <- iris[,1:4] %>% as.matrix()
+d <- dist(x)
+image(as.matrix(d), col = rev(RColorBrewer::brewer.pal(9, "RdBu")))
+```
+
+
+## Iris example
+Our predictors here have four dimensions, but three are very correlated:
+\small
+```{r}
+cor(x)
+```
+
+If we apply PCA, we should be able to approximate this distance with just two dimensions, compressing the highly correlated dimensions. 
+
+## Iris example
+Using the `summary` function we can see the variability explained by each PC:
+
+```{r}
+pca <- prcomp(x)
+summary(pca)
+```
+
+## Iris example
+The first two dimensions account for 97% of the variability. Thus we should be able to approximate the distance very well with two dimensions. We can visualize the results of PCA:
+
+```{r illustrate-pca-twin-heights-iris, echo=FALSE, fig.height = 6, out.width="70%", fig.align='center'}
+rafalib::mypar()
+illustrate_pca(x)
+```
+
+## Iris example
+We plot the first two PCs with color representing the species:
+
+```{r iris-pca}
+data.frame(pca$x[,1:2], Species=iris$Species) %>% 
+  ggplot(aes(PC1,PC2, fill = Species))+
+  geom_point(cex=3, pch=21) +
+  coord_fixed(ratio = 1)
+```
+
+## Non-linear transformations: UMAP
+Check out the following links:
+
+* [https://pair-code.github.io/understanding-umap/](https://pair-code.github.io/understanding-umap/)
+* [https://pair-code.github.io/understanding-umap/supplement.html](https://pair-code.github.io/understanding-umap/)
+
+## Non-linear transformations: UMAP
+The intuitions behind the core principles are actually quite simple: UMAP essentially constructs a weighted graph from the high dimensional data, with edge strength representing how “close” a given point is to another, then projects this graph down to a lower dimensionality. The advanced mathematics (topology) gives UMAP a solid footing with which to handle the challenges of doing this in high dimensions with real data.
+
+## Iris example
+\small
+```{r iris-umap, fig.height = 6, out.width="80%", fig.align='center'}
+library(umap)
+umap_iris <- umap(iris[,1:4])
+data.frame(umap_iris$layout, Species=iris$Species) %>% 
+  ggplot(aes(X1,X2, fill = Species))+
+  geom_point(cex=3, pch=21) +
+  coord_fixed(ratio = 1)
+```
+
+## Eigenvectors and Eigenvalues
+An **eigenvalue** and **eigenvector** of a square matrix ${\bf A}$ are a scalar $\lambda$ and a nonzero vector ${\bf x}$ so that
+$${\bf Ax} = \lambda{\bf x}.$$
+
+__Historical note:__ The prefix _eigen-_ is adopted from the German word for "proper", "characteristic", "own". Eigenvalues and eigenvectors were originally used in physics to study principal axes of the rotational motion of rigid bodies, but have been found to be useful in a wide range of applications.
+
+## Eigenvectors and Eigenvalues
+The eigenvalue-eigenvector equation for a \underline{square} matrix can be written 
+$$({\bf A}-\lambda{\bf I}){\bf x}=0, {\bf x}\ne 0.$$
+This implies that ${\bf A}-\lambda{\bf I}$ is singular and hence that 
+$$det({\bf A}-\lambda{\bf I}) = 0.$$
+This definition of an eigenvalue, which does not directly involve the corresponding eigenvector, is the __characteristic equation__ or __characteristic polynomial__ of ${\bf A}$.
+
+## Eigenvectors and Eigenvalues
+Let $\lambda_1,\lambda_2,\ldots \lambda_n$ be the eigenvalues of a matrix ${\bf A}$ and denote $\Lambda$ denote the $n$-by-$n$ diagonal matrix with the $\lambda_j$ on the diagonal. Also let ${\bf x}_1,{\bf x}_2,\ldots,{\bf x}_n$ be a set of corresponding eigenvectors and and let ${\bf X}$ denote the $n$-by-$n$ matrix whose $j$th column is ${\bf x}_j$. 
+
+Then note the following is true:
+$${\bf AX} = {\bf X}\Lambda.$$
+
+## Eigenvectors and Eigenvalues
+Now make a key assumption that is not true for all matrices—assume that the eigenvectors are linearly independent. Then ${\bf X}^{-1}$ exists and
+$${\bf A} = {\bf X}\Lambda {\bf X}^{-1},$$
+with nonsingular ${\bf X}$. This is known as the __eigenvalue decomposition__ of the matrix ${\bf A}$. If it exists, it allows us to investigate the properties of ${\bf A}$ by analyzing the diagonal matrix $\Lambda$. 
+
+For example, matrix powers can be expressed in terms of powers of scalars:
+$${\bf A}^p = {\bf X}\Lambda^p{\bf X}^{-1}.$$
+
+## Eigenvectors and PCA
+**Principal Components Analysis (PCA)** of an $N\times p$ matrix/dataset ${\bf Y}$ is determined by an eigenvalue decomposition on the **covariance matrix** of ${\bf Y}$:
+$$Cov( {\bf Y} ) =  {\bf X}\Lambda{\bf X}^{-1},$$
+where $\Lambda$ is a diagonal matrix representing the ordered (decreasing) eigenvalues and ${\bf X}$ is a matrix of corresponding eigenvectors (same order as $\Lambda$). The eigenvectors in the columns of ${\bf X}$, provide the **rotation** or **loadings** that comprise the linear combinations of the original covariates. The eigenvalues represent the relative **variance contribution** of each of the linear combinations (eignevectors). 
+
+The rotation can then be applied to the original data to obtain the **principal components** or **PC**s, which are ordered by variance contribution (i.e., PC1 explains the most variation, etc.).  
+
+
+## Singular value decomposition 
+A **Singular Value Decomposition (SVD)** is an extension of the ideas behind the eigenvalue decomposition and PCA, but factorizes ${\bf Y}$ directly. It is widely used in machine learning, both in practice and to understand the mathematical properties of some algorithms. 
+
+The SVD __decomposes__ an $N\times p$ data matrix $Y$ with $p < N$ as 
+$$ Y = U D V^{\top} $$
+With $U$ and $V$ __orthogonal__ of dimensions $N\times p$ and $p\times p$, respectively, and $D$ a $p \times p$ __diagonal__ matrix with the values of the diagonal decreasing: 
+
+$$d_{1,1} \geq d_{2,2} \geq \dots d_{p,p}.$$ 
+
+## Singular value decomposition 
+Visually, the SVD looks something like this:
+![](dimRedfigs/SVD1.png)
+
+
+## Singular value decomposition 
+For illustration purposes, we will construct a dataset of grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage point each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A), and a -25 represents a low grade (F):
+
+\small
+```{r}
+set.seed(1987)
+n <- 100
+k <- 8
+Sigma <- 64  * matrix(c(1, .75, .5, .75, 1, .5, .5, .5, 1), 3, 3) 
+m <- MASS::mvrnorm(n, rep(0, 3), Sigma)
+m <- m[order(rowMeans(m), decreasing = TRUE),]
+y <- m %x% matrix(rep(1, k), nrow = 1) +
+  matrix(rnorm(matrix(n * k * 3)), n, k * 3)
+colnames(y) <- c(paste(rep("Math",k), 1:k, sep="_"),
+                 paste(rep("Science",k), 1:k, sep="_"),
+                 paste(rep("Arts",k), 1:k, sep="_"))
+``` 
+
+## Singular value decomposition 
+We can visualize the 24 test scores for the 100 students below. Are all students just about as good? Does being good in one subject imply you will be good in another? How does the SVD help with all this?  
+
+```{r, echo=FALSE, fig.align='center', out.width="70%"}
+my_image <- function(x, zlim = range(x), ...){
+  colors = rev(RColorBrewer::brewer.pal(9, "RdBu"))
+  cols <- 1:ncol(x)
+  rows <- 1:nrow(x)
+  image(cols, rows, t(x[rev(rows),,drop=FALSE]), xaxt = "n", yaxt = "n",
+        xlab="", ylab="",  col = colors, zlim = zlim, ...)
+  abline(h=rows + 0.5, v = cols + 0.5)
+  axis(side = 1, cols, colnames(x), las = 2)
+}
+
+my_image(y)
+```
+
+
+## Singular value decomposition 
+How would you describe the data based on this figure?
+
+a. The test scores are all independent of each other.
+b. The students that test well are at the top of the image and there seem to be three groupings by subject.
+c. The students that are good at math are not good at science.
+d. The students that are good at math are not good at humanities.
+
+## Singular value decomposition 
+We can examine the correlation between the test scores directly like this:
+
+```{r, echo=FALSE, fig.align='center', out.width="80%"}
+my_image(cor(y), zlim = c(-1,1))
+range(cor(y))
+axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
+```
+
+## Singular value decomposition 
+Which of the following best describes what you see?
+
+a. The test scores are independent.
+b. Math and science are highly correlated but the humanities are not.
+c. There is high correlation between tests in the same subject but no correlation across subjects.
+d. There is a correlation among all tests, but higher if the tests are in science and math and even higher within each subject.
+
+## Singular value decomposition 
+Use the function `svd` to compute the SVD of `y`. This function will return $U$, $V$ and the diagonal entries of $D$. 
+
+```{r}
+s <- svd(y)
+names(s)
+```
+
+And we can look at the sizes of the outputs:
+```{r}
+dim(s$d)
+dim(s$u)
+dim(s$v)
+```
+
+## Singular value decomposition 
+And we can check that the SVD works by typing:
+
+```{r}
+y_svd <- s$u %*% diag(s$d) %*% t(s$v)
+max(abs(y - y_svd))
+```
+
+## Singular value decomposition 
+Visualizing the SVD: Y 
+
+```{r, echo=FALSE, fig.align='center', out.width="75%"}
+my_image(y)
+```
+
+## Singular value decomposition 
+Visualizing the SVD: U 
+```{r, echo=FALSE, fig.align='center', out.width="75%"}
+my_image(s$u)
+```
+
+## Singular value decomposition 
+Visualizing the SVD: diag(D)
+\center
+```{r, echo=FALSE, fig.align='center', out.width="75%"}
+my_image(diag(s$d))
+```
+
+## Singular value decomposition 
+Notice the following:
+\scriptsize
+```{r}
+s$d
+s$d^2/sum(s$d^2)
+cumsum(s$d^2)/sum(s$d^2)
+```
+
+
+## Singular value decomposition 
+Visualizing the SVD: V
+```{r, echo=FALSE, fig.align='center', out.width="75%"}
+my_image(s$v)
+```
+
+## Singular value decomposition 
+Putting them all together
+```{r,eval=F, echo=F}
+png(filename = "y.png", width = 480, height = 2000, units = "px", pointsize = 12)
+my_image(y)
+dev.off()
+
+png(filename = "u.png", width = 480, height = 2000, units = "px", pointsize = 12)
+my_image(s$u)
+dev.off()
+
+png(filename = "d.png", width = 480, height = 480, units = "px", pointsize = 12)
+my_image(diag(s$d))
+dev.off()
+
+png(filename = "v.png", width = 480, height = 480, units = "px", pointsize = 12)
+my_image(s$v)
+dev.off()
+```
+
+\center
+
+![](dimRedfigs/testSVD.png){width=60%}
+
+
+    
+    
+
+## Singular value decomposition
+\center
+![](dimRedfigs/SVD2.png){width=75%}
+
+
+## Singular value decomposition 
+![](dimRedfigs/SVD3.1.jpg)
+
+
+## Singular value decomposition 
+![](dimRedfigs/SVD3.jpg)
+
+## Factor analysis models
+![](dimRedfigs/assign_visual.png)
+
+## Session Info
+\tiny
+```{r session}
+sessionInfo()
+```

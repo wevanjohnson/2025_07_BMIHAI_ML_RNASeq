@@ -1,0 +1,208 @@
+---
+title: "Introduction to the Amarel Cluster"
+author: | 
+  | W. Evan Johnson, Ph.D.
+  | Professor, Division of Infectious Disease
+  | Director, Center for Data Science
+  | Co-Direcor, Center for Biomedical Informatics and Health AI
+  | Rutgers University -- New Jersey Medical School
+date: "`r Sys.Date()`"
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{xcolor}
+  - \setbeamercolor{frametitle}{fg=black}
+  - \usepackage{graphicx}
+  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{amarel/RH_template_Page_2.png}}
+  - \addtobeamertemplate{frametitle}{\vspace*{.25in}}{\vspace*{.25in}}
+  - \setbeamerfont{frametitle}{size=\huge}
+  - \usepackage{tikz}
+output: 
+  beamer_presentation
+classoption: aspectratio=169 
+editor_options: 
+  chunk_output_type: console
+tables: true
+---
+
+# Introduction to the Amarel HPC Cluster
+
+## HPC at Rutgers
+\center 
+![](amarel/amarel.png){width=70%}
+
+[Click here for a short video about the Amarel cluster!](https://www.youtube.com/watch?v=GECyL_5NcAk&t=25s)
+
+## Key Features of Amarel
+\Large
+
+1. **Compute Nodes**: Amarel consists of multiple compute nodes with varying specifications, including CPUs and GPUs.
+2. **Parallel File System**: A high-speed parallel file system for storing and accessing large datasets.
+3. **Job Scheduler**: A job scheduling system for managing computing resources efficiently.
+4. **Software Stack**: A comprehensive collection of software packages and libraries for various scientific computing tasks.
+5. **Networking**: High-speed interconnects for fast communication between compute nodes.
+
+## Getting Started with Amarel
+\Large
+If you are off campus, you will need access to VPN:
+
+\vskip .1in
+[Click here for Rutgers VPN instructions for Windows Users](https://ithelp.rutgers.edu/sp?id=kb_article&sysparm_article=KB0015634&sys_kb_id=ab3e9a5c1b18c2d0723a99b51a4bcb1b&spa=1)
+
+\vskip .1in
+[Click here for Rutgers VPN instructions for Mac Users](https://ithelp.rutgers.edu/sp?id=kb_article&sysparm_article=KB0015620&sys_kb_id=6a95445e1b777110727cc9d2604bcbb5&spa=1)
+
+
+## Getting Started with Amarel
+\Large
+
+1. [**Request Access**: Contact OARC to request access to Amarel](https://oarc.rutgers.edu/amarel-cluster-access-request/)
+2. **Training Workshops**: Attend training workshops offered by OARC to learn how to use Amarel effectively.
+3. [**Documentation and Support**: Explore documentation and seek support from OARC staff and the user community.](https://sites.google.com/view/cluster-user-guide)
+4. **Start Small**: Begin with small-scale experiments and gradually scale up as needed.
+
+# Introduction to OnDemand for HPC Clusters
+
+## What is OnDemand?
+\Large
+
+- OnDemand is a web-based platform that provides a user-friendly interface for accessing and managing (HPC) clusters.
+- It simplifies the process of submitting and monitoring jobs, accessing software, and managing data on HPC systems.
+- Go to: [http://ondemand.hpc.rutgers.edu](http://ondemand.hpc.rutgers.edu) (VPN for off campus).
+
+![](amarel/ondemand.png)
+
+## Key Features of OnDemand
+\Large
+
+1. **Web Interface**: Access HPC resources through a web browser from anywhere with an internet connection.
+2. **Job Submission**: Submit and manage computational jobs without needing to use command-line interfaces.
+3. **File Management**: Upload, download, and manage files and data on the HPC cluster directly from the browser.
+4. **Interactive Sessions**: Launch interactive computing sessions for data analysis and exploration.
+5. **Software Environment**: Access a variety of software packages and development tools installed on the HPC cluster.
+
+## Benefits of OnDemand
+\Large
+
+- **User-Friendly**: OnDemand provides a simplified interface, making HPC resources more accessible to a wider range of users.
+- **Remote Access**: Users can access HPC resources remotely without needing to install any special software.
+- **Increased Productivity**: Streamlined workflows and intuitive interfaces help users focus on their research instead of dealing with technical complexities.
+
+## Accessing Files
+\center
+![](amarel/ondemand_files.png)
+
+## Accessing the Terminal
+\center
+![](amarel/ondemand_terminal_1.png)
+
+
+## Accessing the Terminal
+\center
+![](amarel/ondemand_terminal_2.png)
+
+## Accessing the Amarel Desktop through OnDemand
+\center
+![](amarel/ondemand_desktop_1.png)
+
+## Accessing the Amarel Desktop through OnDemand
+\center
+![](amarel/ondemand_desktop_2.png){height="70%"}
+
+## Accessing the Amarel Desktop through OnDemand
+\center
+![](amarel/ondemand_desktop_3.png)
+
+
+## Accessing the Amarel Desktop through OnDemand
+\center
+![](amarel/ondemand_desktop_4.png)
+
+## Accessing the Amarel Desktop through OnDemand
+\center
+![](amarel/ondemand_desktop_5.png)
+
+## Accessing the Amarel Desktop through OnDemand
+\center
+![](amarel/ondemand_desktop_6.png)
+
+## Accessing R through the terminal
+\Large
+You first need to attach R to your session (using Amarel Desktop):
+
+```{bash, eval=F}
+[wj183@hal0005 ~]$ module load R
+[wj183@amarel1 ~]$ R
+```
+
+## Accessing the RStudio through OnDemand
+![](amarel/ondemand_rstudio_1.png)
+
+## Accessing the RStudio through OnDemand
+\center
+![](amarel/ondemand_rstudio_2.png){width=60%}
+
+## Accessing the RStudio through OnDemand
+\center
+![](amarel/ondemand_rstudio_3.png)
+
+## Accessing the RStudio through OnDemand
+\center
+![](amarel/ondemand_rstudio_4.png)
+
+## Accessing the RStudio through OnDemand
+\center
+![](amarel/ondemand_rstudio_5.png)
+
+# Introduction to Cluster Batch Job Scheduling with SLURM
+
+## What is SLURM?
+\Large
+- SLURM (Simple Linux Utility for Resource Management) is an open-source job scheduler and resource manager used on many high-performance computing (HPC) clusters.
+- It allows users to submit, manage, and monitor batch jobs on computing clusters efficiently.
+
+## Key Concepts
+\Large
+1. **Partition**: A partition is a logical grouping of compute nodes with similar hardware characteristics or usage policies.
+2. **Job Script**: A job script is a text file containing instructions for the scheduler, including job parameters, resource requests, and executable commands.
+3. **Resource Allocation**: Users specify the required resources for their jobs, such as CPUs, memory, and runtime, in the job script.
+4. **Job Status**: Monitor the status of their submitted jobs using SLURM commands or monitoring tools.
+
+## Submitting a Job with SLURM
+\Large
+1. **Create a Job Script**: Write a job script using a text editor, specifying job parameters and commands.
+2. **Submit the Job**: Use the `sbatch` command to submit the job script to SLURM.
+3. **Monitor Job Status**: Check the status of the submitted job using commands like `squeue` or monitoring tools provided by SLURM.
+4. **Retrieve Results**: Once the job completes, retrieve the results and data generated by the job from the designated output directory.
+
+## Example Job Script
+\Large
+```{bash, eval=F}
+#!/bin/bash
+#SBATCH --job-name=my_job
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --mem=8G
+#SBATCH --time=1:00:00
+
+# Execute your command here
+./my_executable input_file.txt > output_file.txt
+```
+
+## Best Practices
+\Large
+- Resource Requests: Specify accurate resource requirements to ensure optimal resource allocation and job performance.
+- Job Prioritization: Understand the partition structure and prioritize jobs accordingly to optimize resource utilization.
+- Job Dependencies: Use job dependencies to sequence jobs and ensure proper execution order when necessary.
+- Error Handling: Include error handling and logging mechanisms in job scripts to facilitate troubleshooting and debugging.
+
+## Conclusion
+\Large
+SLURM is a powerful tool for managing batch job scheduling and resource allocation on cluster computing systems.
+By understanding key concepts and following best practices, users can effectively utilize SLURM to submit, manage, and monitor computational tasks on HPC clusters. Explore documentation and seek support from the cluster administrators or user community to learn more about SLURM and optimize your workflow.
+
+## Session info
+\tiny
+```{r session info}
+sessionInfo()
+```
+
