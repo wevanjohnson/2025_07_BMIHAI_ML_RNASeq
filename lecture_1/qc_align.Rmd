@@ -178,7 +178,10 @@ You can use [`multiqc`](https://multiqc.info) to combine FastQC results. On Amar
 
 ```{bash, eval=F}
 module load miniconda
-pip install multiqc
+conda init
+source ~/.bashrc
+conda install bioconda::multiqc
+#pip install multiqc
 cd example_data/fastqc
 multiqc .
 ```
@@ -253,112 +256,6 @@ Abraham Lincoln: "Give me six hours to chop down a tree and I will spend the fir
 ## Needleman-Wunsch
 \center
 ![](qcfigs/needleman_wunsch4.png){width=60%}
-
-## Using Rsubread to do Alignment
-
-\Large 
-The following userguide will be helpful for you: 
-
-http://bioinf.wehi.edu.au/subread-package/SubreadUsersGuide.pdf
-
-
-## Indexing your genome
-
-\Large 
-Note that you will rarely do this for human alignment. You will usually download an existing index given to you by others who have already done this work. You will do this often if you are aligning microbial reads, e.g. MTB or some other organism for which others have not already made your index for you.
-
-\normalsize
-```{r, eval=F}
-buildindex(basename="example_data/genome/ucsc.hg19.chr1_120-150M",
- reference="example_data/genome/ucsc.hg19.chr1_120-150M.fasta.gz")
-```
-
-\Large
-Took me ~0.2 minutes!
-
-## Aligning your reads:  
-\Large
-Note that this outputs results in a .bam file and not a .sam file
-
-\normalsize
-```{r, eval=F, include=F}
-align(index="example_data/genome/ucsc.hg19.chr1_120-150M",readfile1="example_data/reads/R01_10_short500K.fq.gz",output_file="example_data/alignments/R01_10_short.bam", nthreads=4)
-```
-
-```{r eval=F, include=F}
-align(index="rna_seq/genome/ucsc.hg19.chr1_120-150M",readfile1="rna_seq/reads/R01_10_short500K.fq.gz",output_file="rna_seq/alignments/R01_10_short.bam", nthreads=4) 
-```
-
-```{r, eval=F}
-align(index="rna_seq/genome/ucsc.hg19.chr1_120-150M",
-      readfile1="rna_seq/reads/R01_10_short500K.fq.gz",
-      output_file="rna_seq/alignments/R01_10_short.bam", 
-      nthreads=4) 
-```
-
-My old laptop was an Apple M2, with 8 cores (used 4 cores), 24GB RAM: 
-
-  - Took 15.7 minutes to align ~60M reads to the 30M bases
-  - Took 0.7 minutes to align ~6.5M reads to the 30M bases
-  - Took 0.3 minutes to align ~500K reads to the 30M bases
-
-## Algning the reads using STAR
-
-\Large
-This afternoon we will use the STAR aligner on Amarel to align a set of RNA-seq fastq files!
-
-## Aligned Sequencing Data Formats (SAM and BAM)
-Note that Rsubread outputs a .bam file (bam = binary alignment map) and not a .sam file (sam = sequence alignment map). Here is some information about a .sam file: https://en.wikipedia.org/wiki/SAM_(file_format)
-
-![](qcfigs/sambam.png)
-
-## Aligned Sequencing Data Formats (SAM and BAM)
-\Large
-To convert .sam to .bam or vice versa, a package called Rsamtools. Using Rsamtools, you can convert bam to sam as follows:
-
-```{r, eval=F}
-asSam("rna_seq/alignments/R01_10_short.bam", 
-      overwrite=T) 
-
-# To convert to bam:
-#asBam("rna_seq/alignments/R01_10_short.bam") 
-```
-
-
-## Feature counts
-\Large
-Now we can count reads hitting genes. Approaches/software: 
-
-* HT-Seq
-* STAR
-* Cufflinks
-* RPKM FPKM or CPM
-* RSEM
-* edgeR
-* findOverlaps (GenomicRanges)
-* featureCounts (Rsubread)
-
-## Feature counts
-\center
-![](qcfigs/featurecounts.png){height=60%}
-
-## Feature counts
-
-```{r, eval=FALSE}
-fCountsList = featureCounts(
-  "rna_seq/alignments/R01_10_short.bam",
-  annot.ext="rna_seq_files/genome/genes.chr1_120-150M.gtf",
-  isGTFAnnotationFile=TRUE)
-
-featureCounts = cbind(fCountsList$annotation[,1], 
-                      fCountsList$counts)
-
-write.table(featureCounts, 
-    "rna_seq/alignments/R01_10_short.features.txt", 
-    sep="\t", col.names=FALSE, row.names=FALSE, quote=FALSE)
-```
-
-
 
 ## Session info
 \tiny

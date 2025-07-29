@@ -104,7 +104,6 @@ z  <- cbind(average=(x[,2] + x[,1])/2,
 We can see how the distance between points is mostly explained by the first dimension: the average.
 
 ```{r rotation, fig.width=3, fig.height=3, echo=FALSE, out.width="50%", fig.align='center'}
-rafalib::mypar()
 plot(z, xlim=lim, ylim = lim - mean(lim))
 #lines(z[c(1,2),], col = "blue", lwd = 2)
 #lines(z[c(2,51),], col = "red", lwd = 2)
@@ -202,7 +201,7 @@ head(cbind(z, pca$x))
 We can visualize these to see how the components summarize the data:
 
 
-```{r illustrate-pca-twin-heights, echo=FALSE, height = 5, out.width="70%",fig.align='center'}
+```{r illustrate-pca-twin-heights, echo=FALSE, height = 5, out.width="50%",fig.align='center'}
 illustrate_pca <- function(x, flip=1, 
                            pad = round((nrow(x)/2-ncol(x))*1/4), 
                            cex = 5, center = TRUE){
@@ -257,7 +256,7 @@ head(iris)
 ## Iris example
 Let's compute the distance between each observation. You can clearly see the three species with one species very different from the other two:
 \small
-```{r iris-distances, fig.width = 4, fig.height = 4, out.width="50%", fig.align='center'}
+```{r iris-distances, fig.width = 4, fig.height = 4, out.width="30%", fig.align='center'}
 x <- iris[,1:4] %>% as.matrix()
 d <- dist(x)
 image(as.matrix(d), col = rev(RColorBrewer::brewer.pal(9, "RdBu")))
@@ -284,15 +283,15 @@ summary(pca)
 ## Iris example
 The first two dimensions account for 97% of the variability. Thus we should be able to approximate the distance very well with two dimensions. We can visualize the results of PCA:
 
-```{r illustrate-pca-twin-heights-iris, echo=FALSE, fig.height = 6, out.width="70%", fig.align='center'}
+```{r illustrate-pca-twin-heights-iris, echo=FALSE, fig.height = 6, out.width="50%", fig.align='center'}
 rafalib::mypar()
 illustrate_pca(x)
 ```
 
 ## Iris example
 We plot the first two PCs with color representing the species:
-
-```{r iris-pca}
+\small
+```{r iris-pca, out.width="80%", fig.align='center'}
 data.frame(pca$x[,1:2], Species=iris$Species) %>% 
   ggplot(aes(PC1,PC2, fill = Species))+
   geom_point(cex=3, pch=21) +
@@ -369,7 +368,7 @@ Visually, the SVD looks something like this:
 
 
 ## Singular value decomposition 
-For illustration purposes, we will construct a dataset of grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage point each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A), and a -25 represents a low grade (F):
+We will construct a dataset of grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage point each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A), and a -25 represents a low grade (F):
 
 \small
 ```{r}
@@ -382,14 +381,13 @@ m <- m[order(rowMeans(m), decreasing = TRUE),]
 y <- m %x% matrix(rep(1, k), nrow = 1) +
   matrix(rnorm(matrix(n * k * 3)), n, k * 3)
 colnames(y) <- c(paste(rep("Math",k), 1:k, sep="_"),
-                 paste(rep("Science",k), 1:k, sep="_"),
-                 paste(rep("Arts",k), 1:k, sep="_"))
+  paste(rep("Science",k), 1:k, sep="_"), paste(rep("Arts",k), 1:k, sep="_"))
 ``` 
 
 ## Singular value decomposition 
 We can visualize the 24 test scores for the 100 students below. Are all students just about as good? Does being good in one subject imply you will be good in another? How does the SVD help with all this?  
 
-```{r, echo=FALSE, fig.align='center', out.width="70%"}
+```{r, echo=FALSE, fig.align='center', out.width="50%"}
 my_image <- function(x, zlim = range(x), ...){
   colors = rev(RColorBrewer::brewer.pal(9, "RdBu"))
   cols <- 1:ncol(x)
@@ -405,6 +403,7 @@ my_image(y)
 
 
 ## Singular value decomposition 
+\Large
 How would you describe the data based on this figure?
 
 a. The test scores are all independent of each other.
@@ -415,13 +414,14 @@ d. The students that are good at math are not good at humanities.
 ## Singular value decomposition 
 We can examine the correlation between the test scores directly like this:
 
-```{r, echo=FALSE, fig.align='center', out.width="80%"}
+```{r, echo=FALSE, fig.align='center', out.width="60%"}
 my_image(cor(y), zlim = c(-1,1))
 range(cor(y))
 axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 ```
 
 ## Singular value decomposition 
+\Large
 Which of the following best describes what you see?
 
 a. The test scores are independent.
@@ -430,6 +430,7 @@ c. There is high correlation between tests in the same subject but no correlatio
 d. There is a correlation among all tests, but higher if the tests are in science and math and even higher within each subject.
 
 ## Singular value decomposition 
+\Large
 Use the function `svd` to compute the SVD of `y`. This function will return $U$, $V$ and the diagonal entries of $D$. 
 
 ```{r}
@@ -437,6 +438,8 @@ s <- svd(y)
 names(s)
 ```
 
+## Singular value decomposition 
+\large
 And we can look at the sizes of the outputs:
 ```{r}
 dim(s$d)
@@ -445,6 +448,7 @@ dim(s$v)
 ```
 
 ## Singular value decomposition 
+\Large
 And we can check that the SVD works by typing:
 
 ```{r}
@@ -455,26 +459,26 @@ max(abs(y - y_svd))
 ## Singular value decomposition 
 Visualizing the SVD: Y 
 
-```{r, echo=FALSE, fig.align='center', out.width="75%"}
+```{r, echo=FALSE, fig.align='center', out.width="60%"}
 my_image(y)
 ```
 
 ## Singular value decomposition 
 Visualizing the SVD: U 
-```{r, echo=FALSE, fig.align='center', out.width="75%"}
+```{r, echo=FALSE, fig.align='center', out.width="60%"}
 my_image(s$u)
 ```
 
 ## Singular value decomposition 
 Visualizing the SVD: diag(D)
 \center
-```{r, echo=FALSE, fig.align='center', out.width="75%"}
+```{r, echo=FALSE, fig.align='center', out.width="60%"}
 my_image(diag(s$d))
 ```
 
 ## Singular value decomposition 
 Notice the following:
-\scriptsize
+\tiny
 ```{r}
 s$d
 s$d^2/sum(s$d^2)
@@ -484,7 +488,7 @@ cumsum(s$d^2)/sum(s$d^2)
 
 ## Singular value decomposition 
 Visualizing the SVD: V
-```{r, echo=FALSE, fig.align='center', out.width="75%"}
+```{r, echo=FALSE, fig.align='center', out.width="60%"}
 my_image(s$v)
 ```
 
@@ -510,7 +514,7 @@ dev.off()
 
 \center
 
-![](dimRedfigs/testSVD.png){width=60%}
+![](dimRedfigs/testSVD.png){width=40%}
 
 
     
@@ -518,11 +522,12 @@ dev.off()
 
 ## Singular value decomposition
 \center
-![](dimRedfigs/SVD2.png){width=75%}
+![](dimRedfigs/SVD2.png){width=50%}
 
 
 ## Singular value decomposition 
-![](dimRedfigs/SVD3.1.jpg)
+\center
+![](dimRedfigs/SVD3.1.jpg){width=80%}
 
 
 ## Singular value decomposition 
