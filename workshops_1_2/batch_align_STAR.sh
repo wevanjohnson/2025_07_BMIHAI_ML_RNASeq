@@ -18,11 +18,13 @@ module load samtools/1.3.1
 # set the working directory and index directory
 WORK_DIR="/scratch/$USER/hivtb_data/"
 
+# Don't need to change -- provided for you!!! 
+FASTQ_DIR="/projects/community/classes/bmihai_camp/fastq/"
 INDEX="/projects/community/classes/bmihai_camp/STAR_index_human/index"
 
 # use sed to get the SRR at the line number
 # corresponding to the task ID in the array
-SRRID=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $WORK_DIR/SRR_Acc_List_hivtb.txt)
+SRRID=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $FASTQ_DIR/SRR_Acc_List_hivtb.txt)
 
 # safely make the aligned seq directory
 # in case it doesn't already exist
@@ -33,7 +35,7 @@ command="STAR \
     --runThreadN $(($SLURM_CPUS_PER_TASK * 2)) \
     --alignEndsType Local \
     --genomeDir $INDEX \
-    --readFilesIn $WORK_DIR/fastq/$SRRID.fastq.gz \
+    --readFilesIn $FASTQ_DIR/$SRRID.fastq \
     --outSAMtype SAM \
     --outFileNamePrefix $WORK_DIR/aligned/$SRRID."
 echo $command
