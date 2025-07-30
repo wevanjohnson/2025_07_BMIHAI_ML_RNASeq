@@ -1,6 +1,6 @@
 ---
 title: "An Introduction to RNA-sequencing"
-subtitle: "Differential Expression Analysis"
+subtitle: "Differential Expression and Pathway Analysis"
 author: | 
   | W. Evan Johnson, Ph.D.
   | Professor, Division of Infectious Disease
@@ -13,7 +13,7 @@ header-includes:
   - \usepackage{xcolor}
   - \setbeamercolor{frametitle}{fg=black}
   - \usepackage{graphicx}
-  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{degfigs/RH_template_Page_2.png}}
+  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{regfigs/RH_template_Page_2.png}}
   - \addtobeamertemplate{frametitle}{\vspace*{.25in}}{\vspace*{.25in}}
   - \setbeamerfont{frametitle}{size=\huge}
   - \usepackage{tikz}
@@ -25,27 +25,12 @@ editor_options:
 tables: true
 ---
 
-
-## Installing R Packages: 
-\Large
-Install the following tools: `Rsubread`, `Rsamtools`,  and `SummarizedExperiment`. We will also need help from the `tidyverse.`
-
-```{r eval=F}
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install(c("Rsubread","Rsamtools",
-             "tidyverse","SummarizedExperiment"))
-```
-
-
 ## Load Packages for Today
 \large
 We will be using the following packages for today's lecture:
 We will be using the following packages for our RNA-seq lecture:
 ```{r, warning=FALSE, message=FALSE}
 library(tidyverse) ## tools for data wranging
-library(Rsubread) ## alignment and feature counts
-library(Rsamtools) ## managing .sam and .bam files
 library(SummarizedExperiment) ## managing counts data
 library(edgeR) ## differential expression
 library(DESeq2) ## differential expression
@@ -55,152 +40,105 @@ library(umap) ## dimenstion reduction and plotting data
 ```
 
 
-## Using Rsubread to do Alignment
-
-\Large 
-The following userguide will be helpful for you: 
-
-http://bioinf.wehi.edu.au/subread-package/SubreadUsersGuide.pdf
-
-
-## Indexing your genome
-
-\Large 
-Note that you will rarely do this for human alignment. You will usually download an existing index given to you by others who have already done this work. You will do this often if you are aligning microbial reads, e.g. MTB or some other organism for which others have not already made your index for you.
-
-\normalsize
+## Installing and using the SCTK
+\Large
 ```{r, eval=F}
-buildindex(basename=".../lecture_1/example_data/genome/ucsc.hg19.chr1_120-150M",
- reference="../lecture_1/example_data/genome/ucsc.hg19.chr1_120-150M.fasta.gz")
-```
+install.packages("devtools")
+devtools::install_github("wevanjohnson/singleCellTK")
+library(singleCellTK)
+singleCellTK()
 
-\Large
-Took me ~0.2 minutes!
-
-## Aligning your reads:  
-\Large
-Note that this outputs results in a .bam file and not a .sam file
-
-\normalsize
-```{r, eval=F, include=F}
-align(index="example_data/genome/ucsc.hg19.chr1_120-150M",readfile1="../lecture1/example_data/reads/R01_10_short500K.fq.gz",output_file="../lecture1/example_data/alignments/R01_10_short.bam", nthreads=4)
-```
-
-```{r eval=F, include=F}
-align(index="rna_seq/genome/ucsc.hg19.chr1_120-150M",readfile1="rna_seq/reads/R01_10_short500K.fq.gz",output_file="rna_seq/alignments/R01_10_short.bam", nthreads=4) 
-```
-
-```{r, eval=F}
-align(index="rna_seq/genome/ucsc.hg19.chr1_120-150M",
-      readfile1="rna_seq/reads/R01_10_short500K.fq.gz",
-      output_file="rna_seq/alignments/R01_10_short.bam", 
-      nthreads=4) 
-```
-
-My old laptop was an Apple M2, with 8 cores (used 4 cores), 24GB RAM: 
-
-  - Took 15.7 minutes to align ~60M reads to the 30M bases
-  - Took 0.7 minutes to align ~6.5M reads to the 30M bases
-  - Took 0.3 minutes to align ~500K reads to the 30M bases
-
-## Algning the reads using STAR
-
-\Large
-This afternoon we will use the STAR aligner on Amarel to align a set of RNA-seq fastq files!
-
-## Aligned Sequencing Data Formats (SAM and BAM)
-Note that Rsubread outputs a .bam file (bam = binary alignment map) and not a .sam file (sam = sequence alignment map). Here is some information about a .sam file: https://en.wikipedia.org/wiki/SAM_(file_format)
-
-![](degfigs/sambam.png)
-
-## Aligned Sequencing Data Formats (SAM and BAM)
-\Large
-To convert .sam to .bam or vice versa, a package called Rsamtools. Using Rsamtools, you can convert bam to sam as follows:
-
-```{r, eval=F}
-asSam("rna_seq/alignments/R01_10_short.bam", 
-      overwrite=T) 
-
-# To convert to bam:
-#asBam("rna_seq/alignments/R01_10_short.bam") 
+### Example: open example_data/ 
+### features_combined.txt and meta_data.txt
 ```
 
 
-## Feature counts
+## Background
+
 \Large
-Now we can count reads hitting genes. Approaches/software: 
+- RNA-seq measures gene expression as count data.  
+- Count data are overdispersed: variance >> mean.  
+- Poisson regression assumes equal mean and variance — often violated.  
+- Use the **Negative Binomial (NB)** model to allow for overdispersion.
 
-* HT-Seq
-* STAR
-* Cufflinks
-* RPKM FPKM or CPM
-* RSEM
-* edgeR
-* findOverlaps (GenomicRanges)
-* featureCounts (Rsubread)
+---
 
-## Feature counts
-\center
-![](degfigs/featurecounts.png){height=60%}
+## Negative Binomial Model
 
-## Feature counts
-
-```{r, eval=FALSE}
-fCountsList = featureCounts(
-  "rna_seq/alignments/R01_10_short.bam",
-  annot.ext="rna_seq_files/genome/genes.chr1_120-150M.gtf",
-  isGTFAnnotationFile=TRUE)
-
-featureCounts = cbind(fCountsList$annotation[,1], 
-                      fCountsList$counts)
-
-write.table(featureCounts, 
-    "rna_seq/alignments/R01_10_short.features.txt", 
-    sep="\t", col.names=FALSE, row.names=FALSE, quote=FALSE)
-```
-
-## Data Structures
 \Large
-A data structure is a particular way of organizing data in a computer so that it can be used effectively. The idea is to reduce the space and time complexities of different tasks.
+Let $K_{ij}$ be the count for gene $i$ in sample $j$.
 
-## Data Structures
+\[
+K_{ij} \sim \text{NB}(\mu_{ij}, \alpha_i)
+\]
+
+- $\mu_{ij}$: expected count  
+- $\alpha_i$: dispersion parameter for gene $i$
+
+Variance:
+
+\[
+\text{Var}(K_{ij}) = \mu_{ij} + \alpha_i \mu_{ij}^2
+\]
+
+---
+
+## Link Function and Design Matrix
+
 \Large
-Data structures in R programming are tools for holding multiple values, variables, and sometimes functions
+We model the expected count using a log link:
 
-**Please think very carefully about the way you manage and store your data!** This can make your life much easier and make your code and data cleaner and more portable!
+\[
+\log(\mu_{ij}) = \log(s_j) + \mathbf{x}_j^\top \boldsymbol{\beta}_i
+\]
 
-## Data Frames
+Where:
+- $s_j$: size factor (normalizes for sequencing depth)  
+- $\mathbf{x}_j$: covariates (e.g., condition, batch)  
+- $\boldsymbol{\beta}_i$: regression coefficients for gene $i$
+
+---
+
+## Estimating Dispersion
 \Large
-A large proportion of data analysis challenges start with data stored in a data frame. For example, we stored the data for our motivating example in a data frame. You can access this dataset by loading `TBNanostring.rds` object in R:
 
-```{r}
-TBnanostring <- readRDS("example_data/TBnanostring.rds")
-```
+- Dispersion $\alpha_i$ is typically gene-specific.  
+- Estimated via:
+  - Empirical Bayes shrinkage (DESeq2)  
+  - Tagwise/Moderated dispersion (edgeR)  
 
-## Data Frames
+Goal: Stabilize estimates for low-count genes across the genome.
+
+---
+
+## Hypothesis Testing
+
 \Large
-In RStudio we can view the data with the `View` function:
+For each gene, test:
 
-```{r, eval=F}
-View(TBnanostring)
-```
+\[
+H_0: \beta_{i1} = 0 \quad \text{(no differential expression)}
+\]
 
-## Data Frames
+Common methods:
+- Wald Test (DESeq2)  
+- Likelihood Ratio Test (edgeR, DESeq2)
+
+Adjust for multiple testing:
+
+\[
+\text{FDR control using Benjamini-Hochberg}
+\]
+
+---
+
+## Summary of RNA-seq Analysis
+
 \Large
-Or in RMarkdown you can use the `datatable` function from the `DT` package:
-
-```{r, eval=F}
-datatable(TBnanostring)
-```
-
-You will notice that the TB status is found in the first column of the data frame, followed by the genes in the subsequent columns. The rows represent each individual patient. 
-
-## Advanced Data Structures
-
-There are advanced R data structures that can facilitate object orientated programming. One useful example is the __SummarizedExperiment__ object. 
-
-\center
-![](degfigs/summarizedexperiment.png){height=60%}
+- Negative Binomial models handle overdispersion in RNA-seq.  
+- Log-linear link connects expression to experimental design.  
+- Shrinkage improves dispersion estimation.  
+- Differential expression is tested gene-wise with multiple testing correction.
 
 ## Make a SummarizedExperiment
 \Large
@@ -296,7 +234,7 @@ Logcpm<-cpm(counts,log=TRUE)
 ```{r, include=F}
 meta_data$Disease = as.factor(meta_data$Disease)
 ```
-
+\Large
 ```{r}
 #colData is a data frame of demographic/phenotypic data
 dds <- DESeqDataSetFromMatrix(countData = counts, 
@@ -388,6 +326,75 @@ fit<-eBayes(fit)
 \scriptsize
 ```{r}
 topTable(fit, coef=ncol(design))
+```
+
+
+## Pathway analysis
+\Large
+After finding DEGs, look for correlated genes/networks and enriched pathway sets in the gene set using: 
+
+* Weighted gene coexpression network analysis (WGCNA)
+* GSEA, GSVA, EnrichR, many more!!
+* Qiagen Ingenuity Pathway Analysis (IPA)
+
+## Pathway analysis
+\center
+![](pathfigs/pathway1.png){height="70%"}
+
+## Pathway analysis
+\center
+![](pathfigs/pathway2.png){height=70%}
+
+## TBSignatureProfiler Analysis
+\Large
+The TBSignatureProfiler was developed in the Johnson Lab in 2021 to profile new and existing TB gene expression signatures:
+
+[https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-020-05598-z](https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-020-05598-z)
+
+## TBSignatureProfiler Analysis
+\Large
+```{r, message=FALSE, results='hide'}
+se_hivtb_2 <- se_hivtb[,
+      colData(se_hivtb)$Disease != "tb_hiv_art"]
+TBsigs <- TBsignatures[-12] 
+ssgsea_res <- runTBsigProfiler(se_hivtb_2, 
+                  useAssay = "log_counts_cpm",
+                  signatures = TBsigs,
+                  algorithm = "ssGSEA",
+                  combineSigAndAlgorithm = TRUE,
+                  parallel.sz = 1)
+```
+
+## Signature Heatmap:
+\Large
+```{r, eval=F}
+# Colors for gradient
+signatureHeatmap(ssgsea_res, 
+        name = "Heatmap of Signatures (ssGSEA)", 
+        signatureColNames = names(TBsigs),
+        annotationColNames = c("Disease"),
+        scale = TRUE,
+        split_heatmap = "none",
+        showColumnNames = FALSE)
+```
+
+## Signature Heatmap:
+```{r, echo=F, out.height="80%", fig.align='center'}
+# Colors for gradient
+signatureHeatmap(ssgsea_res, 
+        name = "Heatmap of Signatures (ssGSEA)", 
+        signatureColNames = names(TBsigs),
+        annotationColNames = c("Disease"),
+        scale = TRUE,
+        split_heatmap = "none",
+        showColumnNames = FALSE)
+```
+
+## Signature Boxplots
+```{r, warning=F, out.height="50%", fig.align='center'}
+signatureBoxplot(ssgsea_res, name="ssGSEA", 
+          signatureColNames = names(TBsigs)[c(62,77)],
+          annotationColName = c("Disease"))
 ```
 
 ## Session info

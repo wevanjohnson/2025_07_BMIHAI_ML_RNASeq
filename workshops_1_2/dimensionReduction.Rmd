@@ -242,7 +242,7 @@ pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
 ## Add labels, title, and theme
 pca_reduction %>% ggplot() + 
   geom_point(aes(x=PC1, y=PC2, color=Condition), shape=1) + 
-  xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("UMAP Plot") +
+  xlab("PC 1") + ylab("PC 2") + ggtitle("PCA Plot") +
   theme(plot.title = element_text(hjust = 0.5))  
 ```
 
