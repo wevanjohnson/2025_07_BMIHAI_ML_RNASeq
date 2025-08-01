@@ -62,6 +62,9 @@ indata <- indata[keep, ]
 
 # Table 
 table(colData(indata)[,2:3])
+
+# Table by barch
+table(colData(indata)[,2:4])
 ```
   
 2.\  Apply PCA and UMAP to your data and generate dimension reduction plots for the results. Use different colors for the TB and LTBI samples (`Tb_status`). Use different plotting symbols for malnourishment (`bmi_cat2`). Note that you should be using the log CPM values for this analysis. 
@@ -72,9 +75,14 @@ library(umap)
 
 pca_out <- prcomp(t(assay(indata,"log_combat_cpm")))
 pca_plot <- data.frame(pca_out$x, Disease=indata$Tb_status, 
-                       Nutrition=indata$bmi_cat2)
-pca_plot %>% ggplot(aes(x=PC1, y=PC2, color=Disease, shape=Nutrition)) +
+                       Nutrition=indata$bmi_cat2,
+                       Batch=indata$batch)
+pca_plot %>% ggplot(aes(x=PC1, y=PC3, color=Disease, shape=Nutrition)) +
   geom_point(size=1.5)
+
+pca_out$sdev^2/sum(pca_out$sdev^2)
+cumsum(pca_out$sdev^2/sum(pca_out$sdev^2))
+
 
 set.seed(1)
 umap_out <- umap(t(assay(indata,"log_combat_cpm")))
@@ -128,9 +136,9 @@ head(results[[1]])
 library(glmnet)
 library(caret)
 
-## using the most signifcant 500 genes from DESeq2
+## using the most signifcant 1000 genes from DESeq2
 train <- t(as.matrix(assay(indata,"log_combat_cpm"))[
-  order(results(dds)[,6])[1:500],
+  order(results(dds)[,6])[1:1000],
   indata$bmi_cat2=="well"])
 train.labels <- indata$Tb_status[indata$bmi_cat2=="well"]
 
@@ -172,7 +180,7 @@ confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
 
 ```{r}
 test <- t(as.matrix(assay(indata,"log_combat_cpm"))[
-  order(results(dds)[,6])[1:500],
+  order(results(dds)[,6])[1:5000],
   indata$bmi_cat2=="mal"])
 test.labels <- indata$Tb_status[indata$bmi_cat2=="mal"]
 test.plus.labels <- data.frame(test.labels,test)
