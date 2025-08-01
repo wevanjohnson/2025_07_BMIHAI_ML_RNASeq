@@ -126,12 +126,33 @@ db_list <- listEnrichrDbs()
 genes <- rownames(results(dds))[1:50]
 results <- enrichr(genes, databases = c("Reactome_Pathways_2024"))
 head(results[[1]])
+
+## TBSignatureProfiler
+TBsigs <- TBsignatures[-12] 
+ssgsea_res <- runTBsigProfiler(indata, 
+                  useAssay = "log_counts_cpm",
+                  signatures = TBsigs,
+                  algorithm = "ssGSEA",
+                  combineSigAndAlgorithm = TRUE,
+                  parallel.sz = 1)
+
+signatureHeatmap(ssgsea_res, 
+        name = "Heatmap of Signatures (ssGSEA)", 
+        signatureColNames = names(TBsigs),
+        annotationColNames = c("Tb_status"),
+        scale = TRUE,
+        split_heatmap = "none",
+        showColumnNames = FALSE)
+
+signatureBoxplot(ssgsea_res, name="ssGSEA", 
+          signatureColNames = c("Sweeney_OD_3","Zak_RISK_16"),
+          annotationColName = c("Tb_status"))
 ```
   
 
 6.\ Using the well-nourished samples as your training set, develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status. Compare the cross-validation overall accuracy for these three methods. 
 
-```{r}
+```{r, eval=F, include=F}
 ## Elastic Net
 library(glmnet)
 library(caret)
@@ -178,7 +199,7 @@ confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
 
 7.\ Apply your biomarkers to the malnourished samples (as a validation set). How do your biomarkers perform? Should we develop biomarkers for the malnourished samples independently? 
 
-```{r}
+```{r, eval=F, include=F}
 test <- t(as.matrix(assay(indata,"log_combat_cpm"))[
   order(results(dds)[,6])[1:5000],
   indata$bmi_cat2=="mal"])
@@ -203,7 +224,7 @@ rf.test
 
 8.\ (Extra) Develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status in the malnourished samples. How does the cross vaidation accuracy compare with the accuracies in 6 and 7? 
 
-```{r}
+```{r, eval=F, include=F}
 
 ### Elastic net
 cvfit.mal <- cv.glmnet(test, test.labels, family = "binomial", 
