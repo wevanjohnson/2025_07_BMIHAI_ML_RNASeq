@@ -540,7 +540,8 @@ modelLookup("knn")
 
 If we run it with default values: 
 ```{r}
-train_knn <- train(y ~ ., method = "knn", data = mnist_27$train)
+train_knn <- train(y ~ ., method = "knn", 
+                   data = mnist_27$train)
 ```
 
 ## Cross validation 

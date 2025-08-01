@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.7.27)  31 JUL 2025 23:39
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.7.27)  1 AUG 2025 08:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1603,7 +1603,7 @@ l.2 \phantomsection\label{caret-cv}
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 977.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 978.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [53
 
@@ -1620,7 +1620,7 @@ Package pdftex.def Info: crossValidation_files/figure-beamer/caret-highlight-1.p
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 992.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 993.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [54
 
@@ -1631,7 +1631,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 992.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1004.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1005.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [55
 
@@ -1642,7 +1642,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1004.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1017.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1018.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [56
 
@@ -1653,7 +1653,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1017.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1035.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1036.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [57
 
@@ -1661,13 +1661,13 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1035.
 <crossValidation_files/figure-beamer/train-knn-plot1-1.pdf, id=478, 423.5825pt x 206.7725pt>
 File: crossValidation_files/figure-beamer/train-knn-plot1-1.pdf Graphic file (type pdf)
 <use crossValidation_files/figure-beamer/train-knn-plot1-1.pdf>
-Package pdftex.def Info: crossValidation_files/figure-beamer/train-knn-plot1-1.pdf  used on input line 1040.
+Package pdftex.def Info: crossValidation_files/figure-beamer/train-knn-plot1-1.pdf  used on input line 1041.
 (pdftex.def)             Requested size: 358.50229pt x 175.00969pt.
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1040.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1041.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [58
 
@@ -1678,7 +1678,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1040.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1058.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1059.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [59
 
@@ -1689,7 +1689,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1058.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1079.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1080.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [60
 
@@ -1697,14 +1697,14 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1079.
 \openout4 = `crossValidation.vrb'.
 
 (./crossValidation.vrb)
-Overfull \vbox (3.90063pt too high) detected at line 1102
+Overfull \vbox (3.90063pt too high) detected at line 1103
  []
 
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1102.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1103.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [61
 
@@ -1712,14 +1712,14 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1102.
 \openout4 = `crossValidation.vrb'.
 
 (./crossValidation.vrb)
-Overfull \vbox (12.90063pt too high) detected at line 1123
+Overfull \vbox (12.90063pt too high) detected at line 1124
  []
 
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1123.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1124.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [62
 
@@ -1727,13 +1727,13 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1123.
 <crossValidation_files/figure-beamer/cv-10-fold-accuracy-estimate1-1.pdf, id=517, 423.5825pt x 206.7725pt>
 File: crossValidation_files/figure-beamer/cv-10-fold-accuracy-estimate1-1.pdf Graphic file (type pdf)
 <use crossValidation_files/figure-beamer/cv-10-fold-accuracy-estimate1-1.pdf>
-Package pdftex.def Info: crossValidation_files/figure-beamer/cv-10-fold-accuracy-estimate1-1.pdf  used on input line 1128.
+Package pdftex.def Info: crossValidation_files/figure-beamer/cv-10-fold-accuracy-estimate1-1.pdf  used on input line 1129.
 (pdftex.def)             Requested size: 358.50229pt x 175.00969pt.
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1128.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1129.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [63
 
@@ -1744,7 +1744,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1128.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1147.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1148.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [64
 
@@ -1752,13 +1752,13 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1147.
 <crossValidation_files/figure-beamer/accuracy-with-sd-bars1-1.pdf, id=537, 423.5825pt x 204.765pt>
 File: crossValidation_files/figure-beamer/accuracy-with-sd-bars1-1.pdf Graphic file (type pdf)
 <use crossValidation_files/figure-beamer/accuracy-with-sd-bars1-1.pdf>
-Package pdftex.def Info: crossValidation_files/figure-beamer/accuracy-with-sd-bars1-1.pdf  used on input line 1152.
+Package pdftex.def Info: crossValidation_files/figure-beamer/accuracy-with-sd-bars1-1.pdf  used on input line 1153.
 (pdftex.def)             Requested size: 358.50229pt x 173.31055pt.
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1152.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1153.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [65
 
@@ -1766,17 +1766,17 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1152.
 <crossValidation_files/figure-beamer/mnist27-optimal-knn-fit-1.pdf, id=551, 712.6625pt x 495.8525pt>
 File: crossValidation_files/figure-beamer/mnist27-optimal-knn-fit-1.pdf Graphic file (type pdf)
 <use crossValidation_files/figure-beamer/mnist27-optimal-knn-fit-1.pdf>
-Package pdftex.def Info: crossValidation_files/figure-beamer/mnist27-optimal-knn-fit-1.pdf  used on input line 1160.
+Package pdftex.def Info: crossValidation_files/figure-beamer/mnist27-optimal-knn-fit-1.pdf  used on input line 1161.
 (pdftex.def)             Requested size: 239.00558pt x 166.28752pt.
 
-Overfull \vbox (7.81433pt too high) detected at line 1160
+Overfull \vbox (7.81433pt too high) detected at line 1161
  []
 
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1160.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1161.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [66
 
@@ -1787,7 +1787,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1160.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1180.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1181.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [67
 
@@ -1798,7 +1798,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1180.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1208.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1209.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [68
 
@@ -1809,7 +1809,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1208.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1224.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1225.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [69
 
@@ -1817,13 +1817,13 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1224.
 <crossValidation_files/figure-beamer/loess-accuracy1-1.pdf, id=588, 712.6625pt x 495.8525pt>
 File: crossValidation_files/figure-beamer/loess-accuracy1-1.pdf Graphic file (type pdf)
 <use crossValidation_files/figure-beamer/loess-accuracy1-1.pdf>
-Package pdftex.def Info: crossValidation_files/figure-beamer/loess-accuracy1-1.pdf  used on input line 1229.
+Package pdftex.def Info: crossValidation_files/figure-beamer/loess-accuracy1-1.pdf  used on input line 1230.
 (pdftex.def)             Requested size: 239.00558pt x 166.28752pt.
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1229.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1230.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [70
 
@@ -1834,7 +1834,7 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1229.
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1249.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1250.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [71
 
@@ -1842,17 +1842,17 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1249.
 <crossValidation_files/figure-beamer/gam-smooth-1.pdf, id=608, 712.6625pt x 495.8525pt>
 File: crossValidation_files/figure-beamer/gam-smooth-1.pdf Graphic file (type pdf)
 <use crossValidation_files/figure-beamer/gam-smooth-1.pdf>
-Package pdftex.def Info: crossValidation_files/figure-beamer/gam-smooth-1.pdf  used on input line 1256.
+Package pdftex.def Info: crossValidation_files/figure-beamer/gam-smooth-1.pdf  used on input line 1257.
 (pdftex.def)             Requested size: 239.00558pt x 166.28752pt.
 
-Overfull \vbox (7.81433pt too high) detected at line 1256
+Overfull \vbox (7.81433pt too high) detected at line 1257
  []
 
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1256.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1257.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [72
 
@@ -1863,14 +1863,14 @@ Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1256.
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <6> not available
 (Font)              Font shape `T1/lmtt/b/n' tried instead on input line 7.
 )
-Overfull \vbox (165.73929pt too high) detected at line 1317
+Overfull \vbox (165.73929pt too high) detected at line 1318
  []
 
 
 
 File: cvfigs/RH_template_Page_2.png Graphic file (type png)
 <use cvfigs/RH_template_Page_2.png>
-Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1317.
+Package pdftex.def Info: cvfigs/RH_template_Page_2.png  used on input line 1318.
 (pdftex.def)             Requested size: 455.24408pt x 256.07507pt.
 [73
 
@@ -1902,7 +1902,7 @@ Here is how much of TeX's memory you used:
  14 hyphenation exceptions out of 8191
  101i,11n,107p,411b,523s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmex10.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi12.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss10.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss12.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss17.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss8.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss9.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmssbx10.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsso10.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsso12.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsso17.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt12.pfb></Users/evan/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt8.pfb>
-Output written on crossValidation.pdf (73 pages, 1235492 bytes).
+Output written on crossValidation.pdf (73 pages, 1235577 bytes).
 PDF statistics:
  760 PDF objects out of 1000 (max. 8388607)
  566 compressed objects within 6 object streams
