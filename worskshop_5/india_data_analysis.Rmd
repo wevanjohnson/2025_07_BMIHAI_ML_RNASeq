@@ -223,5 +223,4 @@ rf.test <- randomForest(test.labels ~ ., data = test.plus.labels,
                         nodesize = nodesize[which.max(acc)])
 y_hat <- as.factor(predict(rf.test, test.plus.labels[,-1], type = "class"))
 confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
-
 ```
