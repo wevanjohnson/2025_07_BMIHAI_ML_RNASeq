@@ -123,6 +123,105 @@ head(results[[1]])
 
 6.\ Using the well-nourished samples as your training set, develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status. Compare the cross-validation overall accuracy for these three methods. 
 
+```{r}
+## Elastic Net
+library(glmnet)
+library(caret)
+
+## using the most signifcant 500 genes from DESeq2
+train <- t(as.matrix(assay(indata,"log_combat_cpm"))[
+  order(results(dds)[,6])[1:500],
+  indata$bmi_cat2=="well"])
+train.labels <- indata$Tb_status[indata$bmi_cat2=="well"]
+
+cvfit <- cv.glmnet(train, train.labels, family = "binomial", 
+                   type.measure = "class")
+plot(cvfit)
+cvfit$lambda.min
+coef(cvfit, s = "lambda.min")
+
+y_hat <- as.factor(predict(cvfit, train, s = "lambda.min", type = "class"))
+confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
+
+## svm
+library(e1071)
+train.plus.label <- data.frame(train.labels, train)
+svmfit <- svm(train.labels ~ ., data = train.plus.label, kernel = "linear", cost = 10, scale = FALSE)
+
+y_hat <- as.factor(predict(svmfit, train.plus.label[,-1], type = "class"))
+confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
+
+## Random Forest
+library(randomForest)
+nodesize <- seq(1, 51, 10)
+acc <- sapply(nodesize, function(ns){
+  train(train.labels ~ ., method = "rf", data = train.plus.label, 
+        tuneGrid = data.frame(mtry = 2), 
+        nodesize = ns)$results$Accuracy })
+plot(nodesize, acc)
+
+rf <- randomForest(train.labels ~ ., data = train.plus.label,
+                        nodesize = nodesize[which.max(acc)])
+y_hat <- as.factor(predict(rf, train.plus.label[,-1], type = "class"))
+confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
+
+```
+
+
 7.\ Apply your biomarkers to the malnourished samples (as a validation set). How do your biomarkers perform? Should we develop biomarkers for the malnourished samples independently? 
 
+```{r}
+test <- t(as.matrix(assay(indata,"log_combat_cpm"))[
+  order(results(dds)[,6])[1:500],
+  indata$bmi_cat2=="mal"])
+test.labels <- indata$Tb_status[indata$bmi_cat2=="mal"]
+test.plus.labels <- data.frame(test.labels,test)
+
+### Elastic net
+y_hat <- as.factor(predict(cvfit, test, s = "lambda.min", type = "class"))
+en.test <- confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+en.test
+
+### SVM
+y_hat <- as.factor(predict(svmfit, test.plus.labels[,-1], type = "class"))
+svm.test <-confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+svm.test 
+  
+### Random Forest
+y_hat <- as.factor(predict(rf, test.plus.labels[,-1], type = "class"))
+rf.test <- confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+rf.test
+```
+
 8.\ (Extra) Develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status in the malnourished samples. How does the cross vaidation accuracy compare with the accuracies in 6 and 7? 
+
+```{r}
+
+### Elastic net
+cvfit.mal <- cv.glmnet(test, test.labels, family = "binomial", 
+                   type.measure = "class")
+
+y_hat.mal <- as.factor(predict(cvfit.mal, test, s = "lambda.min", type = "class"))
+confusionMatrix(y_hat.mal, test.labels)$overall["Accuracy"]
+## compared to 0.8157895 
+
+## SVM
+svmfit.test <- svm(test.labels ~ ., data = test.plus.labels, kernel = "linear", cost = 10, scale = FALSE)
+
+y_hat <- as.factor(predict(svmfit.test, test.plus.labels[,-1], type = "class"))
+confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+
+## Random Forest
+nodesize <- seq(1, 51, 10)
+acc <- sapply(nodesize, function(ns){
+  train(test.labels ~ ., method = "rf", data = test.plus.labels, 
+        tuneGrid = data.frame(mtry = 2), 
+        nodesize = ns)$results$Accuracy })
+plot(nodesize, acc)
+
+rf.test <- randomForest(test.labels ~ ., data = test.plus.labels,
+                        nodesize = nodesize[which.max(acc)])
+y_hat <- as.factor(predict(rf.test, test.plus.labels[,-1], type = "class"))
+confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+
+```
