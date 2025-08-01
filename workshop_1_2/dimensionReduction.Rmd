@@ -1,0 +1,335 @@
+---
+title: "Dimension Reduction Examples in R"
+author: W. Evan Johnson
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    toc: true
+    toc_float: true
+    theme: "flatly"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Set up: load these packages!
+```{r setup, include=F}
+suppressMessages({
+  library(umap)
+  library(DT)
+  library(tidyverse)
+  library(SummarizedExperiment)
+  library(TBSignatureProfiler)
+})
+```
+
+```{r, eval=F}
+library(umap)
+library(DT)
+library(tidyverse)
+library(SummarizedExperiment)
+library(TBSignatureProfiler)
+```
+
+## Data Structures
+A data structure is a particular way of organizing data in a computer so that it can be used effectively. The idea is to reduce the space and time complexities of different tasks.
+
+Data structures in R programming are tools for holding multiple values, variables, and sometimes functions
+
+**Please think very carefully about the way you manage and store your data!** This can make your life much easier and make your code and data cleaner and more portable!
+
+### Data Frames
+A large proportion of data analysis challenges start with data stored in a data frame. For example, we stored the data for our motivating example in a data frame. You can access this dataset by loading `TBNanostring.rds` object in R:
+
+```{r}
+TBnanostring <- readRDS("TBnanostring.rds")
+```
+
+In RStudio we can view the data with the `View` function:
+
+```{r, eval=F}
+View(TBnanostring)
+```
+
+Or in RMarkdown you can use the `datatable` function from the `DT` package:
+
+```{r}
+datatable(TBnanostring)
+```
+
+You will notice that the TB status is found in the first column of the data frame, followed by the genes in the subsequent columns. The rows represent each individual patient. 
+
+### Advanced Data Structures
+
+There are advanced R data structures, __S3__ and __S4__ class objects, that can facilitate object orientated programming. One useful example of an S4 class data structure is the __SummarizedExperiment__ object. 
+
+\center
+![](figs/summarizedexperiment.png){height=70%}
+
+
+## Dimension Reduction {.tabset}
+### PCA Example
+Here is the code for applying PCA to the Nanostring dataset:
+
+```{r}
+pca_out <- prcomp(TBnanostring[,-1])
+names(pca_out)
+```
+
+Here is a summary of the explained variation from the PCA:
+```{r}
+round(pca_out$sdev^2/sum(pca_out$sdev^2),3)
+```
+
+And the cumulative variation explained:
+```{r}
+round(cumsum(pca_out$sdev^2)/sum(pca_out$sdev^2),3)
+```
+
+Now we will make a dataframe with the PCs for later use!
+```{r}
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+datatable(pca_reduction)
+```
+
+### UMAP Example
+```{r}
+set.seed(0) ## need to set the seed or results might be different
+umap_out <- umap(TBnanostring[,-1])
+names(umap_out)
+```
+
+Now we will make a dataframe with the UMAP results for later use!
+```{r}
+umap_reduction <- as.data.frame(umap_out$layout)
+umap_reduction$Class <- as.factor(TBnanostring$TB_Status)
+datatable(umap_reduction)
+```
+
+## Visualizing data using `ggplot2` {.tabset}
+Below is a step-by-step tutorial for making PCA and UMAP plots using `ggplot2`. 
+
+### PCA Example {.tabset}
+#### Step 0
+We want to make the following plot using `ggplot2`.
+```{r, echo=F}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+
+## Make a dataframe with the results for plotting
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+
+## Plot results with ggpplot
+pca_reduction %>% ggplot() + 
+  geom_point(aes(x=PC1, y=PC2, color=Condition), shape=1) + 
+  xlab("PC 1") + ylab("PC 2") + ggtitle("PCA Plot") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+#### Step 1
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+```
+
+#### Step 2
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+```
+
+#### Step 3
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+
+## Make a dataframe with the results for plotting
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+```
+
+#### Step 4
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+
+## Make a dataframe with the results for plotting
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+
+## Initialize the plot
+pca_reduction %>% ggplot()
+```
+
+#### Step 5
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+
+## Make a dataframe with the results for plotting
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+
+## Add your geometry layer with x and y aesthetics
+pca_reduction %>% ggplot() + 
+  geom_point(aes(x=PC1, y=PC2)) 
+```
+
+#### Step 6
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+
+## Make a dataframe with the results for plotting
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+
+## Change the shape of the points
+pca_reduction %>% ggplot() + 
+  geom_point(aes(x=PC1, y=PC2), shape=1)  
+```
+
+
+#### Step 7
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+
+## Make a dataframe with the results for plotting
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+
+## Change color of points (add a mapping aesthetic) 
+pca_reduction %>% ggplot() + 
+  geom_point(aes(x=PC1, y=PC2, color=Condition), shape=1)
+```
+
+#### Step 8
+```{r}
+## Read in the data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply PCA
+pca_out <- prcomp(TBnanostring[,-1])
+
+## Make a dataframe with the results for plotting
+pca_reduction <- as.data.frame(pca_out$x)
+pca_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+
+## Add labels, title, and theme
+pca_reduction %>% ggplot() + 
+  geom_point(aes(x=PC1, y=PC2, color=Condition), shape=1) + 
+  xlab("PC 1") + ylab("PC 2") + ggtitle("PCA Plot") +
+  theme(plot.title = element_text(hjust = 0.5))  
+```
+
+
+### UMAP Example {.tabset}
+Here is the final UMAP plot
+```{r}
+## Read in data
+TBnanostring <- readRDS("TBnanostring.rds")
+
+## Apply UMAP reduction
+set.seed(0)
+library(umap)
+umap_out <- umap(TBnanostring[,-1])
+
+## Make dataframe for plotting in tidy format
+umap_reduction <- as.data.frame(umap_out$layout)
+umap_reduction$Condition <- as.factor(TBnanostring$TB_Status)
+
+## Plot results with ggpplot
+umap_reduction %>% ggplot() + 
+  geom_point(aes(x=V1, y=V2, color=Condition), shape=1) + 
+  xlab("UMAP 1") + ylab("UMAP 2") + ggtitle("UMAP Plot") +
+  theme(plot.title = element_text(hjust = 0.5))  
+```
+
+## Visualization and Dimension reduction
+Now using an example dataset from: [Verma, et al., 2018](https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-018-3127-4)
+```{r}
+## read in data
+counts <- read.table("features_combined.txt", 
+  sep="\t", header=T, row.names=1)
+meta_data <- read.table("meta_data.txt",
+  sep="\t", header=T, row.names=1)
+```
+
+Using this dataset, please do the following: 
+
+1.\ Make a `SummarizedExperiment` object named `se_hivtb`.
+
+2.\ Generate a log counts per million assay (hint: use `TBSignareProfiler::mkAssay()`).
+
+```{r, include=F}
+se_hivtb <- SummarizedExperiment(assays=list(counts=counts),
+                     colData = meta_data)
+
+## Make log counts, counts per million (cpm), logcpm
+se_hivtb <- mkAssay(se_hivtb, log = TRUE, 
+                     counts_to_CPM = TRUE)
+assays(se_hivtb)
+```
+
+3.\ Generate a Principal Components Analysis (PCA) plot for these data
+
+```{r, include=F}
+pca_out <- prcomp(t(assay(se_hivtb,"log_counts_cpm")))
+  
+pca_plot <- as.data.frame(pca_out$x)
+pca_plot$Disease <- as.factor(se_hivtb$Disease)
+
+g <- pca_plot %>% ggplot(aes(x=PC1, y=PC5, color=Disease)) +
+  geom_point(size=1.5) + xlab("PCA1") + ylab("PCA5") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle("PCA Plot")
+
+plot(g)
+```
+
+4.\  Generate a Uniform Manifold Approximation and Projection (UMAP) plot for these data
+
+```{r, include=F}
+set.seed(1)
+umap_out <- umap(t(assay(se_hivtb,"log_counts_cpm")))
+
+umap_plot <- as.data.frame(umap_out$layout)
+umap_plot$Disease <- as.factor(se_hivtb$Disease)
+
+g <- umap_plot %>% ggplot(aes(x=V1, y=V2, color=Disease)) +
+  geom_point(size=1.5) + xlab("UMAP1") + ylab("UMAP2") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle("UMAP Plot")
+
+plot(g)
+```
+
+
+## Session Info
+```{r session}
+sessionInfo()
+```
