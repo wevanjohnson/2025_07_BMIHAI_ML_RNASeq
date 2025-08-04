@@ -1,0 +1,295 @@
+---
+title: "Removing Batch Effects from Genomics Data"
+author: | 
+  | W. Evan Johnson, Ph.D.
+  | Professor, Division of Infectious Disease
+  | Director, Center for Data Science
+  | Director, Center for Biomedical Informatics and Health AI
+  | Rutgers University -- New Jersey Medical School
+date: "`r Sys.Date()`"
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{xcolor}
+  - \setbeamercolor{frametitle}{fg=black}
+  - \usepackage{graphicx}
+  - \usebackgroundtemplate{\includegraphics[width=\paperwidth]{batchFigs//RH_template_Page_2.png}}
+  - \addtobeamertemplate{frametitle}{\vspace*{.25in}}{\vspace*{.25in}}
+  - \setbeamerfont{frametitle}{size=\huge}
+  - \usepackage{tikz}
+output: 
+  beamer_presentation
+classoption: aspectratio=169 
+editor_options: 
+  chunk_output_type: console
+tables: true
+---
+
+
+
+## ComBat Intuition
+Consider the following model: $$Y_{ijg}=\alpha_g+X\beta_g+\gamma_{ig}+\delta_{ig}\epsilon_{ijg}$$  where:
+\begin{itemize}
+\item $\alpha_g$ is the overall gene expression
+\item $X$ is a design matrix 
+\item  $\beta_g$ contains the regression coefficients 
+\item  The error terms $\epsilon_{ijg}\sim N(0, \sigma_g^2)$
+\item $\gamma_{ig}$ and $\delta_{ig}$ are additive and multiplicative batch effects
+\end{itemize}
+
+\center
+(Johnson et al., Biostatistics, 2007)}}
+
+## Batch effects
+\Large
+
+**Batch Effect:** Non-biological variation due to differences in batches of data that confound the relationships between covariates of interest.
+
+Caused by differences:
+
+- Gene expression profiling platform
+- Lab protocol or experimenter
+- Time of day or hybridization
+- Atmospheric ozone level (Rhodes et al. 2004)
+
+## Batch effect examples: Nitric Oxide
+\begin{center}
+\includegraphics[width=5in]{batchFigs/batch1.pdf}
+\end{center}
+
+## Batch effect examples: Bladder cancer
+
+\begin{center}
+\includegraphics[width=2.25in]{batchFigs/batchexample.png}
+\end{center}
+
+## Batch effect examples: 1000 genomes
+
+\begin{center}
+\includegraphics[height=2.5in]{batchFigs/1000genomes}
+\end{center}
+
+## Batch effect examples: Proteomics
+\Large
+Proteomic data with batch effects:
+
+- Proteomic markers to predict endometriosis (39 total)
+- Single peptide predictors of disease (AUC): 0.82, 0.76, 0.74, 0.74, 0.70 (+12 more $>$0.6)
+- Single peptide predictors of batch (AUC): 0.99, 0.94, 0.91, 0.86, 0.86, 0.84, 0.84, 0.84, 0.83, 0.82 (+7 more $>$0.6)
+- Predict batch better than disease!
+
+## Normalization?
+\Large
+
+- **Question:** Shouldn't normalization take care of this?
+    - Answer: NO!
+- Batch effects often impacts genes or sets of genes
+- Batch effects often remain after normalization
+
+# Adjusting for batch effects
+
+## Early methods for batch effects
+\Large
+- Singular value decomposition (Alter et al., 2000)
+- Distance weighed discrimination (Benito et al., 2004)
+- ComBat (Johnson et al., 2007)
+- Surrogate variable analysis (Leek and Storey, 2007)
+- Cross Platform Normalization (Shabalin er al., 2008)
+- Barcoding (Zilliox and Irizarry 2007; Piccolo et al. 2013)
+- Single sample normalization (Hubbell et al., 2002; McCall et al., 2010; Piccolo et al. 2012)
+- Removing unwanted variation (Risso et al., 2014; Jacob et al., 2016)
+
+## ComBat Intuition
+\Large
+Consider the following model:
+$$Y_{ijg}=\alpha_g+X\beta_g+\gamma_{ig}+\delta_{ig}\epsilon_{ijg}$$
+where:
+
+- $\alpha_g$ is the overall gene expression
+- $X$ is a design matrix
+- $\beta_g$ contains the regression coefficients
+- The error terms $\epsilon_{ijg}\sim N(0, \sigma_g^2)$
+- $\gamma_{ig}$ and $\delta_{ig}$ are additive and multiplicative batch effects
+
+## ComBat Intuition
+\Large
+Adjust for batch effects:
+$$Y_{ijg}^*=\frac{Y_{ig}-\hat{\alpha}_g-X\hat{\beta}_g-\hat{\gamma}_{ig}}{\hat\delta_{ig}}+\hat{\alpha}_g+X\hat{\beta}_g$$
+
+**Problem:** How to robustly estimate the parameters?
+
+**Answer:** Empirical Bayes!
+
+## Step 1: Standardize the data
+\Large
+Genes are on different scales, so first standardize the data:
+$$Z_{ijg}=\frac{Y_{ijg}-\hat\alpha_g-X\hat\beta_g}{\hat\sigma_g}$$
+where $\hat\alpha_g$, $\hat\beta_g$, and $\hat\sigma_g^2$ are estimated using gene-wise MLEs.
+
+## Step 2: EB batch effect estimates
+\Large
+**Additive batch adjustment ($\gamma_{ig}$):** Using Bayes theorem and a $Gaussian(\gamma_i, \tau_i^2)$ conjugate prior:
+$$E[\gamma_{ig} | \mathbf{Z_{ig}}, \delta_{ig}^2]=\frac{\tau_i^2\sum_j{Z_{ijg}}+\delta_{ig}^2\gamma_i}{n_i\tau_i^2+\delta_{ig}^2}.$$
+which can therefore be estimated as
+$$\gamma_{ig}^*=\hat E[\gamma_{ig} | \mathbf{Z_{ig}}, \delta_{ig}^2]=\frac{n_i\bar\tau_i^2\hat\gamma_{ig}+\delta_{ig}^{2*}\bar\gamma_i}{n_i\bar\tau_i^2+\delta_{ig}^{2*}}.$$
+
+## Step 2: EB batch effect estimates
+\Large
+**Mulitplicative batch adjustment ($\delta_{ig}$):** Using Bayes theorem and an $Inverse$ $Gamma(\lambda_i, \theta_i)$ conjugate prior:
+$$E[\delta_{ig}^2|\mathbf{Z_{ig}},\gamma_{ig}]=\frac{\theta_i+\frac{1}{2}\sum_j{(Z_{ijg}-\gamma_{ig})^2}}{\frac{n_i}{2}+\lambda_i-1}.$$
+which can therefore be estimated as
+$$\delta_{ig}^{2*}=\hat E[\delta_{ig}^2|\mathbf{Z_{ig}},\gamma_{ig}]=\frac{\bar\theta_i+\frac{1}{2}\sum_j{(Z_{ijg}-\gamma_{ig}^*)^2}}{\frac{n_i}{2}+\bar\lambda_i-1}.$$
+
+## Step 2: EB batch effect estimates
+\Large
+Estimate hyperpriors using the Method of Moments across all genes:
+
+For the additive batch adjustment:
+$$\bar\gamma_i=\frac{1}{G}\sum_g\hat\gamma_{ig}, \mbox{ and } \bar\tau_i^2=\frac{1}{G-1}\sum_g{(\gamma_{ig}-\bar\gamma_i)^2}.$$
+
+For the multiplicative batch adjustment:
+$$\bar\lambda_i=\frac{\bar V_i+2\bar S_i^2}{\bar S_i^2} \mbox{ and } \bar\theta_i=\frac{\bar V_i^3+\bar V_i\bar S_i^2}{\bar S_i^2}.$$
+
+## Step 2: EB batch effect estimates
+\Large
+Alternative non-parametric prior, assume:
+$$Z_{ijg}\sim N(\gamma_{ig}, \delta_{ig}^2),\mbox{ and let }w_{igk}=L(\mathbf{Z_{ig}}|\hat\gamma_{ik},\hat\delta_{ik}^2).$$
+
+The nonparametric EB batch adjustments $\gamma_{ig}^*, \delta_{ig}^{2*}$ are given by
+$$\gamma_{ig}^*=\frac{\sum_{k}{w_{igk}\hat\gamma_{ik}}}{\sum_{k}{w_{igk}}}\mbox{ and } \delta_{ig}^{2*}=\frac{\sum_{k}{w_{igk}\hat\delta_{ik}^2}}{\sum_{k}{w_{igk}}},$$
+
+i.e. Monte Carlo integration over an unspecified empirical prior.
+
+## Empirical Bayes Shrinkage
+
+\begin{center}
+\includegraphics[width=2.5in]{batchFigs/shrinkage.png}
+\end{center}
+
+## Step 3: Adjust the data for batch effects
+\Large
+The EB batch adjusted data $Y_{ijg}^*$ can be calculated using EB estimated batch effects:
+$$Y_{ijg}^*=\frac{\hat\sigma_g}{\delta_{ig}^*}(Z_{ijg}-\gamma_{ig}^*)+\hat\alpha_g+X\hat\beta_g.$$
+
+## Batch effect examples: Nitric Oxide
+
+\begin{center}
+\includegraphics[width=5in]{batchFigs/batch1.pdf}
+\end{center}
+
+## Batch effect examples: Nitric Oxide
+
+\begin{center}
+\includegraphics[width=5in]{batchFigs/batch5.pdf}
+\end{center}
+
+## Batch effect examples: Proteomics
+\Large
+Proteomics data with batch effects:
+
+- Proteomic markers to predict endometriosis (39 total)
+- Single peptide predictors of disease (AUC): 0.82, 0.76, 0.74, 0.74, 0.70 (+12 more $>$0.6)
+- Single peptide predictors of batch (AUC): 0.99, 0.94, 0.91, 0.86, 0.86, 0.84, 0.84, 0.84, 0.83, 0.82 (+7 more $>$0.6)
+- Predict batch better than disease!
+
+## Batch effect examples: Proteomics
+\Large
+After ComBat batch adjustment:
+
+- Single peptide predictors of disease (AUC): 0.80, 0.79, 0.75, 0.70, 0.70 (+7 more $>$0.6)
+- Single peptide predictors of batch (AUC): 0.64, 0.60
+
+# Confounded Designs
+
+## Confounded Designs
+
+\Large
+What do you do in the following cases?
+
+- Treatments in one batch, controls in another
+- Treatment 1 in Batch 1, Treatment 2 in Batch 2
+- Same experiment with different tissues or cell lines
+- Some samples are in their own batch?
+- Can I do with anything with these cases?
+
+## Confounded Designs
+
+\begin{center}
+\includegraphics[height=2.75in]{batchFigs/visual0.pdf}
+\end{center}
+
+## Confounded Designs---Solution!
+
+\begin{center}
+\includegraphics[height=2.75in]{batchFigs/visual2.pdf}
+\end{center}
+
+## Confounded Designs---Solution!
+\Large
+Assumptions for parametric ComBat:
+1. Gaussian data: $Z_{ijg}\sim N(\gamma_{ig}, \delta_{ig}^2)$
+2. Systematic batch effects: $\gamma_{ig}\sim N(\gamma_i, \tau_i^2)$, $\delta_{ig}^2\sim IG(\lambda_i, \theta_i)$
+
+Assumptions for confounded ComBat:
+1. $Z_{ijg}\sim N(\gamma_{ig}, \delta_{ig}^2)$
+2. Some (but not all) have treatment effects: $\phi_g\sim Bern(\pi)$
+3. Systematic: $\gamma_{ig}\sim N(\gamma_i+\phi_g\eta_i, \tau_i^2+\phi_g\rho_i^2)$, $\delta_{ig}^2\sim IG(\lambda_i, \theta_i)$
+
+## Confounded Designs---Solution!
+
+\begin{center}
+\includegraphics[width=2.75in]{batchFigs/confmix1.pdf}
+\end{center}
+
+## Confounded Designs---Solution!
+
+\begin{center}
+\includegraphics[width=2.75in]{batchFigs/confmix3.pdf}
+\end{center}
+
+## Confounded Designs---Solution!
+
+\Large
+Confounded ComBat steps:
+
+1. Standardize the data
+2. Estimation of the hyper priors via the EM algorithm
+3. EB batch/treatment estimates using maximum posterior estimates
+4. Adjust the data and restore original scaling
+
+**Note:** This works on single samples as well!
+
+## RAS and PI3K Pathway Activation
+\Large
+- Human primary mammary epithelial cells
+- Transfect with an adenovirus expressing RAS or PI3K
+- Observe change compared to control
+- RAS and PI3K profiled at different times on different platforms
+- Control cells are the same!
+
+## 
+\begin{center}
+\includegraphics[width=3.5in]{batchFigs/RASPI3K.pdf}
+\end{center}
+
+## RAS and PI3K Pathway Activation
+
+Results with p-value cutoff of 0.001:
+\begin{center}
+\begin{tabular}{|l|ccc|}
+\multicolumn{1}{c}{} & \multicolumn{3}{c}{PI3K vs. RAS}\\
+\hline
+& Sens & Spec & AUC \\\hline
+ComBat Confound & 0.747 & 0.730 & 0.786 \\
+ComBat Single & 0.764 & 0.740 & 0.799 \\
+No Batch & 0.787 & 0.361& 0.613 \\\hline
+\end{tabular}
+\end{center}
+**Confounding:** decrease in sensitivity (25-29%) and specificity (22-26%)
+
+
+
+## Session Info
+\tiny
+```{r session}
+sessionInfo()
+```

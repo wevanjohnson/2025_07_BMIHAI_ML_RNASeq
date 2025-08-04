@@ -1,0 +1,258 @@
+---
+title: "India Data Analysis"
+author: W. Evan Johnson
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    toc: true
+    toc_float: true
+    theme: "flatly"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Introduction
+Now its time to practice what we have learned in class and learn even more! For this homework project you will do an RNA-seq analysis of a [TB/Malnutrition dataset](https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.1011166/full). 
+
+## Batch correction
+```{r, eval=F,}
+library(SummarizedExperiment)
+library(sva)
+library(TBSignatureProfiler)
+
+indata <- readRDS("indata.rds")
+
+batch <- indata$batch
+covs <- model.matrix(~colData(indata)$Tb_status + colData(indata)$bmi_cat2)
+
+combat_counts <- ComBat_seq(as.matrix(assay(indata, "counts")), 
+      batch = batch, covar_mod = covs)
+assay(indata, "combat") <- combat_counts
+
+## Make log counts, counts per million (cpm), logcpm
+indata <- mkAssay(indata, input_name = "combat",log = TRUE, 
+                     counts_to_CPM = TRUE)
+assays(indata)
+saveRDS(indata, "combat_indata.rds")
+```
+
+## Analysis
+
+Begin by reading the `indata.rds` file: 
+
+```{r}
+suppressMessages({library(SummarizedExperiment)})
+indata <- readRDS("combat_indata.rds")
+assays(indata)
+```
+
+Please use the batch corrected `combat` (counts) and `log_combat_cpm` (log cpm) assays for your analyses. 
+
+## Analysis steps: 
+
+
+1.\  Preprocess these data by removing any genes with zero expression for all samples, and by generating a log counts per million assay. Make a two dimensional table for TB status and malnutrition status. 
+
+```{r, eval=F, include=F}
+# Remove genes with all zero counts
+keep <- rowSums(assay(indata,"combat")) > 0
+sum(!keep) ## answer!
+indata <- indata[keep, ]
+
+# Table 
+table(colData(indata)[,2:3])
+
+# Table by barch
+table(colData(indata)[,2:4])
+```
+  
+2.\  Apply PCA and UMAP to your data and generate dimension reduction plots for the results. Use different colors for the TB and LTBI samples (`Tb_status`). Use different plotting symbols for malnourishment (`bmi_cat2`). Note that you should be using the log CPM values for this analysis. 
+
+```{r, eval=F, include=F }  
+library(tidyverse)
+library(umap)
+
+pca_out <- prcomp(t(assay(indata,"log_combat_cpm")))
+pca_plot <- data.frame(pca_out$x, Disease=indata$Tb_status, 
+                       Nutrition=indata$bmi_cat2,
+                       Batch=indata$batch)
+pca_plot %>% ggplot(aes(x=PC1, y=PC3, color=Disease, shape=Nutrition)) +
+  geom_point(size=1.5)
+
+pca_out$sdev^2/sum(pca_out$sdev^2)
+cumsum(pca_out$sdev^2/sum(pca_out$sdev^2))
+
+
+set.seed(1)
+umap_out <- umap(t(assay(indata,"log_combat_cpm")))
+umap_plot <- data.frame(umap_out$layout, Disease=indata$Tb_status, 
+                       Nutrition=indata$bmi_cat2)
+umap_plot %>% ggplot(aes(x=X1, y=X2, color=Disease, shape=Nutrition)) +
+  geom_point(size=1.5)
+```
+
+3.\  Use `DESeq2` to do a differential expression analysis (on the counts) comparing the TB to the LTBI samples adjusting for BMI status. What are the most differentially expressed genes? 
+  
+
+```{r, eval=F, include=F }  
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(countData = assay(indata,"combat"), colData = colData(indata), design = ~ Tb_status + bmi_cat2)
+dds <- DESeq(dds)
+res <- results(dds, contrast = c("Tb_status", "TB", "LTBI"))
+top_genes_deseq <- res[head(order(res$pvalue), 50),]
+```
+
+4.\ Make a heatmap plot of the `DESeq2` results (top 50). Add a colorbar for disease and BMI status. 
+ 
+```{r, eval=F, include=F }  
+library(ComplexHeatmap)
+mat = as.matrix(assay(indata,"log_combat_cpm"))[order(results(dds)[,6])[1:50],] 
+mat = t(scale(t(mat))) ## scale gene expression
+df=data.frame(Disease=indata$Tb_status, 
+                       Nutrition=indata$bmi_cat2) 
+ha = HeatmapAnnotation(df = df, col = list(Disease=c("TB"="red", "LTBI"="blue"),
+                                           Nutrition=c("well"="purple", "mal"="yellow")))
+Heatmap(mat,show_row_names=F, show_column_names = F, top_annotation = ha)
+```
+  
+5.\ Conduct a pathway analysis of the top 50 DESeq2 genes using enrichR (through R or online). Use the "Reactome\_Pathways\_2024" database. What are the top scoring pathways? (Extra) Use the TBSignatureProfiler to analyze the data! 
+ 
+
+```{r, eval=F, include=F }  
+library(enrichR)
+setEnrichrSite("Enrichr")
+db_list <- listEnrichrDbs()
+genes <- rownames(results(dds))[1:50]
+results <- enrichr(genes, databases = c("Reactome_Pathways_2024"))
+head(results[[1]])
+
+## TBSignatureProfiler
+TBsigs <- TBsignatures[-12] 
+ssgsea_res <- runTBsigProfiler(indata, 
+                  useAssay = "log_counts_cpm",
+                  signatures = TBsigs,
+                  algorithm = "ssGSEA",
+                  combineSigAndAlgorithm = TRUE,
+                  parallel.sz = 1)
+
+signatureHeatmap(ssgsea_res, 
+        name = "Heatmap of Signatures (ssGSEA)", 
+        signatureColNames = names(TBsigs),
+        annotationColNames = c("Tb_status"),
+        scale = TRUE,
+        split_heatmap = "none",
+        showColumnNames = FALSE)
+
+signatureBoxplot(ssgsea_res, name="ssGSEA", 
+          signatureColNames = c("Sweeney_OD_3","Zak_RISK_16"),
+          annotationColName = c("Tb_status"))
+```
+  
+
+6.\ Using the well-nourished samples as your training set, develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status. Compare the cross-validation overall accuracy for these three methods. 
+
+```{r, eval=F, include=F}
+## Elastic Net
+library(glmnet)
+library(caret)
+
+## using the most signifcant 1000 genes from DESeq2
+train <- t(as.matrix(assay(indata,"log_combat_cpm"))[
+  order(results(dds)[,6])[1:1000],
+  indata$bmi_cat2=="well"])
+train.labels <- indata$Tb_status[indata$bmi_cat2=="well"]
+
+cvfit <- cv.glmnet(train, train.labels, family = "binomial", 
+                   type.measure = "class")
+plot(cvfit)
+cvfit$lambda.min
+coef(cvfit, s = "lambda.min")
+
+y_hat <- as.factor(predict(cvfit, train, s = "lambda.min", type = "class"))
+confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
+
+## svm
+library(e1071)
+train.plus.label <- data.frame(train.labels, train)
+svmfit <- svm(train.labels ~ ., data = train.plus.label, kernel = "linear", cost = 10, scale = FALSE)
+
+y_hat <- as.factor(predict(svmfit, train.plus.label[,-1], type = "class"))
+confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
+
+## Random Forest
+library(randomForest)
+nodesize <- seq(1, 51, 10)
+acc <- sapply(nodesize, function(ns){
+  train(train.labels ~ ., method = "rf", data = train.plus.label, 
+        tuneGrid = data.frame(mtry = 2), 
+        nodesize = ns)$results$Accuracy })
+plot(nodesize, acc)
+
+rf <- randomForest(train.labels ~ ., data = train.plus.label,
+                        nodesize = nodesize[which.max(acc)])
+y_hat <- as.factor(predict(rf, train.plus.label[,-1], type = "class"))
+confusionMatrix(y_hat, train.labels)$overall["Accuracy"]
+
+```
+
+
+7.\ Apply your biomarkers to the malnourished samples (as a validation set). How do your biomarkers perform? Should we develop biomarkers for the malnourished samples independently? 
+
+```{r, eval=F, include=F}
+test <- t(as.matrix(assay(indata,"log_combat_cpm"))[
+  order(results(dds)[,6])[1:5000],
+  indata$bmi_cat2=="mal"])
+test.labels <- indata$Tb_status[indata$bmi_cat2=="mal"]
+test.plus.labels <- data.frame(test.labels,test)
+
+### Elastic net
+y_hat <- as.factor(predict(cvfit, test, s = "lambda.min", type = "class"))
+en.test <- confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+en.test
+
+### SVM
+y_hat <- as.factor(predict(svmfit, test.plus.labels[,-1], type = "class"))
+svm.test <-confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+svm.test 
+  
+### Random Forest
+y_hat <- as.factor(predict(rf, test.plus.labels[,-1], type = "class"))
+rf.test <- confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+rf.test
+```
+
+8.\ (Extra) Develop Elastic Net (logistic regression), SVM, and Random Forest predictors for TB status in the malnourished samples. How does the cross vaidation accuracy compare with the accuracies in 6 and 7? 
+
+```{r, eval=F, include=F}
+
+### Elastic net
+cvfit.mal <- cv.glmnet(test, test.labels, family = "binomial", 
+                   type.measure = "class")
+
+y_hat.mal <- as.factor(predict(cvfit.mal, test, s = "lambda.min", type = "class"))
+confusionMatrix(y_hat.mal, test.labels)$overall["Accuracy"]
+## compared to 0.8157895 
+
+## SVM
+svmfit.test <- svm(test.labels ~ ., data = test.plus.labels, kernel = "linear", cost = 10, scale = FALSE)
+
+y_hat <- as.factor(predict(svmfit.test, test.plus.labels[,-1], type = "class"))
+confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+
+## Random Forest
+nodesize <- seq(1, 51, 10)
+acc <- sapply(nodesize, function(ns){
+  train(test.labels ~ ., method = "rf", data = test.plus.labels, 
+        tuneGrid = data.frame(mtry = 2), 
+        nodesize = ns)$results$Accuracy })
+plot(nodesize, acc)
+
+rf.test <- randomForest(test.labels ~ ., data = test.plus.labels,
+                        nodesize = nodesize[which.max(acc)])
+y_hat <- as.factor(predict(rf.test, test.plus.labels[,-1], type = "class"))
+confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
+```
+
+
+8.\ (Extra) Apply H20 AI's AutoML function to develop a biomarkers for the India dataset. 
