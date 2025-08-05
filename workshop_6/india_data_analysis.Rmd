@@ -21,7 +21,7 @@ library(SummarizedExperiment)
 library(sva)
 library(TBSignatureProfiler)
 
-indata <- readRDS("indata.rds")
+indata <- readRDS("combat_indata.rds")
 
 batch <- indata$batch
 covs <- model.matrix(~colData(indata)$Tb_status + colData(indata)$bmi_cat2)
@@ -256,3 +256,30 @@ confusionMatrix(y_hat, test.labels)$overall["Accuracy"]
 
 
 8.\ (Extra) Apply H20 AI's AutoML function to develop a biomarkers for the India dataset. 
+
+```{r}
+library(h2o)
+library(SummarizedExperiment)
+h2o.init()
+
+indata <-readRDS("combat_indata.rds")
+
+well_indata <- indata[,indata$bmi_cat2=="well"]
+mal_indata <- indata[,indata$bmi_cat2=="mal"]
+
+datframe_well <- data.frame(TB_status=as.factor(well_indata$Tb_status),t(assay(well_indata,"log_combat_cpm")))
+datframe_mal <- data.frame(TB_status=as.factor(mal_indata$Tb_status),t(assay(mal_indata,"log_combat_cpm")))
+
+train <- as.h2o(datframe_well)
+valid <- as.h2o(datframe_mal)
+predictors <- colnames(train)
+
+indata_automl <- h2o.automl(x = predictors, y = "TB_status",
+                          training_frame = train,
+                          max_runtime_secs = 20, seed = 1,
+                          validation_frame = valid, 
+                          leaderboard_frame = valid)
+
+lb <- h2o.get_leaderboard(indata_automl)
+head(lb)
+```
