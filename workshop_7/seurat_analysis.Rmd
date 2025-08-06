@@ -1,0 +1,143 @@
+---
+title: "scRNAseq"
+author: "Sean Lu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup libraries, include=FALSE}
+library("Seurat")
+library("tidyverse")
+```
+
+## Loading in Data from CellRanger
+The 'Read10X' function loads in the output from cellranger's 10X pipeline. It contains a matrix with the number of molecules for each feature using the unique molecular identified (UMI). 
+The 'CreateSeuratObject' function loads this matrix into a seurat object which acts as a container for future analyses. For quality control, min.cells includes features detected in at least 3 cells and min.features includes cells with at least 200 features (genes)
+
+```{r Creating Seurat objects, eval=TRUE, include=TRUE}
+pbmc_tb <- Read10X(data.dir = "/projects/community/classes/bmihai_camp/single-cell/cellranger_res/TB")
+pbmc_tb <- CreateSeuratObject(counts = pbmc_tb, project = "pbmc", min.cells = 3, min.features = 200)
+```
+
+## QC and filtering
+After loading in the cell ranger data, we need to do a number of quality control (QC) steps. These include:
+ - Number of unique genes detected in each cell
+  - Low-quality and empty droplets will have few genes (cells < 200 feature counts)
+  - Cell doublets or multiplets will have significantly high gene counts. These will look like hybrid genes ( cells > 2500 feature counts) 
+ - Total number of molecules 
+ - Percentage of mitochondiral contamination (cells > 5% mitochondrial counts)
+  - Dying cells have high mitochondrial contamination
+```{r QC and filtering}
+pbmc_tb[["percent.mitochondrial"]] <- PercentageFeatureSet(pbmc_tb, pattern = "^MT-")
+
+before_qc_plot_tb <- VlnPlot(pbmc_tb, features = c("nFeature_RNA", "nCount_RNA", "percent.mitochondrial"), ncol = 3)
+before_qc_plot_tb
+
+pbmc_tb <- subset(pbmc_tb, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mitochondrial < 5)
+after_qc_plot_tb <- VlnPlot(pbmc_tb, features = c("nFeature_RNA", "nCount_RNA", "percent.mitochondrial"), ncol = 3)
+after_qc_plot_tb
+```
+
+## Normalization of counts
+Next we'll want to normalize the data. There is high variability across cells due to differences in sequencing depth per cell, capture efficiency and cell size and RNA content. To compare cells, we'll use a global log normalization
+This method normalizes each feature by the total gene expression, multiplies by a scale factor of 10,000 by default, and log transforms this result
+```{r Normalization}
+pbmc_tb <- NormalizeData(pbmc_tb)
+```
+## Feature Selection
+Finally, we can start doing some analyses on this data. First, we'll identify highly variable features for downstream analyses. These highly variable features are likely the ones that highlight biological signal and by focusing on these features we can simplify downstream analyses. By convention, we'll find the top 2000 highly variable features.
+```{r Feature Selection}
+pbmc_tb <- FindVariableFeatures(pbmc_tb, selection.method = "vst", nfeatures=2000)
+
+fs_pbmc_tb <- VariableFeaturePlot(pbmc_tb) |>
+  LabelPoints(points = head(VariableFeatures(pbmc_tb), 10), repel = TRUE)
+fs_pbmc_tb
+```
+
+## Scaling Data and Linear Dimension Reduction
+Before we can do linear dimension reduction analyses like PCA and UMAP, we should first scale the gene expression data. This is because these dimension reduction methods are sensitive to scale and highly expressed genes will dominate the principal components due to their magnitude. 
+In order to address this we'll linearly transform the gene expression data such that the mean of each gene expression is 0 and the variance is 1 across all cells using the 'ScaleData' function
+After scaling we can perform 'RunPCA' to generate the principle components 
+We can also use the 'ElbowPlot' function which ranks the percentage of variance captured by each plot. This will help us determine which how many components we should include in or analysis 
+```{r Scaling Data and Linear Dimension Reduction}
+## Scaling Data
+all.genes_tb <- rownames(pbmc_tb)
+pbmc_tb <- ScaleData(pbmc_tb, features = all.genes_tb)
+
+## Calculating Principle Components
+pbmc_tb <- RunPCA(pbmc_tb, features = VariableFeatures(object = pbmc_tb))
+
+## Plotting principle components
+DimPlot(pbmc_tb, reduction = "pca")
+
+## Elbow plot
+ElbowPlot(pbmc_tb)
+```
+## Cluster Cells via graph-based clustering approach
+Seurat uses a k-nearest neighbors graph based on PCA-reduced space in the 'FindNeighbors' function to calculate a Euclidean distance between cells. This method captures local cell neighbors to encode similarity between cells.
+Seurat then uses a graph based clustering algorithm which partitions the KNN graph into communities by maximizing modularity. There is a resulotion prarmter that controls for cluster granularity where lower values indicates few clusters
+Once clusters are found we can use non-linear dimensional reduction techniques such as UMAP or tSNE to visualize these clusters. 
+```{r Clustering cells and UMAP}
+pbmc_tb <- FindNeighbors(pbmc_tb, dims = 1:20)
+pbmc_tb <- FindClusters(pbmc_tb, resolution = 0.4)
+
+pbmc_tb <- RunUMAP(pbmc_tb, dims = 1:20)
+DimPlot(pbmc_tb, reduction = "umap")
+```
+
+## Cell type annotations
+Although we've identified these clusters, we haven't labeled which cell types are associated with with clusters. There are many available tools that look at differentially expressed features within these clusters (cluster biomarkers) to evaluate cell type. Here we'll use sctype 
+```{r Cell type annotations}
+# install.packages("openxlsx")
+library("openxlsx")
+# install.packages("HGNChelper")
+library("HGNChelper")
+
+source("https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/R/sctype_wrapper.R")
+pbmc_tb <- run_sctype(pbmc_tb, assay = "RNA", scaled = TRUE, known_tissue_type = "Immune system",
+                      custom_marker_file="https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master/ScTypeDB_short.xlsx",
+                      name="sctype_classification")
+
+DimPlot(pbmc_tb, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'sctype_classification')  
+```
+
+## Finding differentially expressed features within each Cluster
+Now that our clusters are identified, we can look for cluster biomarkers using the 'FindAllMarkers' function in Seurat via differential expression (DE). Note that this may take a few minutes. 
+```{r Cluster Differential Expression}
+#devtools::install_github('immunogenomics/presto')
+library("presto")
+
+pbmc_tb.markers <- FindAllMarkers(pbmc_tb, only.ps = TRUE)
+selected_features <- pbmc_tb.markers |>
+  group_by(cluster) |>
+  dplyr::filter(avg_log2FC > 1) |>
+  dplyr::top_n(5) |>
+  dplyr::ungroup() |>
+  dplyr::pull(gene) |>
+  unique()
+  
+  
+```
+We can visualize these differential expressions with 'VlnPlot' and 'FeaturePlot'
+```{r Visualization Differential Expression}
+VlnPlot(pbmc_tb, features = selected_features[1:5], slot = "counts", log = TRUE)
+FeaturePlot(pbmc_tb, features = selected_features[1:4])
+```
+
+## Summary
+1. Loading in Data
+2. QC and Filter
+3. Normalization
+4. Feature Selection
+5. Scaling
+6. Clustering
+7. Cell type annotation
+8. Differential Gene Expression
+
+
+## scRNAseq analysis on multiple samples
+Now run this analysis on the control sample. The cellranger results are in this directory '/projects/community/classes/bmihai_camp/single-cell/cellranger_res/control'.
+Compare the analyses between the two groups:
+Are the cell clusters different? Are there more cells in one group than in another for certain samples?
+Are the differentially expressed features different between samples?
+Are the cell types identifed different between groups?
