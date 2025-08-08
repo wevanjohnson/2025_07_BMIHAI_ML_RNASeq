@@ -16,7 +16,7 @@ WORK_DIR="/scratch/$USER/bmihai_ws7"
 
 # path to fastq files
 FASTQPATH="$WORK_DIR/fastq"
-FASTQPATH="/projects/f_wj183_1/data/2020_TB_LTBI_PBMC_singlcell_Cai/fastqs"
+
 # get sample to process
 INPUT=($(ls -d $FASTQPATH/*R1_001.fastq.gz))
 
